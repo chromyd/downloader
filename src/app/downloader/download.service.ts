@@ -10,14 +10,6 @@ export class DownloadService {
   public getFile(path: string): Observable<Blob> {
 
     return this.http.get(path, {responseType: 'blob'});
-      // .map((response: Response) => <Blob>response.blob())
-      /*
-      .pipe(
-        catchError((error: any) => console.log(`Oh-no: ${JSON.stringify(error)}`))
-      );
-      */
-      // .catch((fuck: any) => console.log('Fuckingham'));
-      // .catch((error: Error) => console.log(`Oh-no: ${JSON.stringify(error)}`));
   }
 
 }
