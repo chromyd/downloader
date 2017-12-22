@@ -19,7 +19,10 @@ export class DownloaderComponent implements OnInit {
   download() {
     console.log(`Now downloading ${this.downloadUrl}`);
     this.downloadService.getFile(this.downloadUrl)
-      .subscribe(fileData => FileSaver.saveAs(fileData, 'saved.data'));
+      .subscribe(fileData => FileSaver.saveAs(fileData, this.basename()));
   }
 
+  basename(): string {
+    return this.downloadUrl.replace(/.*\/([^?]*).*/, '$1');
+  }
 }
