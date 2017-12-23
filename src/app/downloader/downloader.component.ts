@@ -13,16 +13,16 @@ export class DownloaderComponent implements OnInit {
 
   constructor(private downloadService: DownloadService) { }
 
+  static basename(url: string): string {
+    return url.replace(/.*\/([^?]*).*/, '$1');
+  }
+
   ngOnInit() {
   }
 
   download() {
     console.log(`Now downloading ${this.downloadUrl}`);
     this.downloadService.getFile(this.downloadUrl)
-      .subscribe(fileData => FileSaver.saveAs(fileData, this.basename()));
-  }
-
-  basename(): string {
-    return this.downloadUrl.replace(/.*\/([^?]*).*/, '$1');
+      .subscribe(fileData => FileSaver.saveAs(fileData, DownloaderComponent.basename(this.downloadUrl)));
   }
 }
