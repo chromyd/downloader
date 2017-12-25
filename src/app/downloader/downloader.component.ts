@@ -45,7 +45,7 @@ export class DownloaderComponent implements OnInit {
   }
 
   processLine(text: string) {
-    const [, keyUrl, iv] = this.keyPattern.exec(text) || ['', '', ''];
+    const [, keyUrl, iv] = this.keyPattern.exec(text) || [, null, null];
     if (keyUrl && keyUrl !== this.lastKeyUrl) {
       console.log(`URL=${keyUrl}, IV=${iv}`);
       this.getKey(keyUrl);
