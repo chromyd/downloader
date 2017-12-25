@@ -35,3 +35,7 @@ Obtain Key:
 Decrypt:
 
 	openssl enc -d -p -aes-128-cbc -nopad -in 42.ts -out decoded2.ts -K KEY -iv 06598c2f673f448aefe8745da6b862dd
+
+Convert:
+
+	ffmpeg -i all.ts -acodec copy -vcodec copy all.mp4
