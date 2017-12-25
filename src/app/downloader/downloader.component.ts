@@ -38,6 +38,7 @@ export class DownloaderComponent implements OnInit {
   }
 
   processList(text: string) {
-    console.log(`Contents for ${this.downloadUrl}: ${text}`);
+    console.log(`Contents for ${this.downloadUrl}:`);
+    text.split('\n').forEach(e => console.log(`L: ${e}`));
   }
 }
