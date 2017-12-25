@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import 'rxjs/add/operator/map';
 import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/retry';
 
 @Injectable()
 export class DownloadService {
@@ -9,7 +10,7 @@ export class DownloadService {
   constructor(private http: HttpClient) { }
 
   public getFile(path: string): Observable<Blob> {
-    return this.http.get(path, {responseType: 'blob'});
+    return this.http.get(path, {responseType: 'blob'}).retry(100);
   }
 
   public getKey(path: string): Observable<string> {
