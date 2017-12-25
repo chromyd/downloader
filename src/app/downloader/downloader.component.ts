@@ -44,6 +44,10 @@ export class DownloaderComponent implements OnInit {
       .subscribe(buffer => FileSaver.saveAs(new Blob([buffer]), `${DownloaderComponent.basename(url)}.key`));
   }
 
+  downloadFile(url: string, localName: string) {
+    this.downloadService.getFile(url).subscribe(fileData => FileSaver.saveAs(fileData, localName));
+  }
+
   processList(text: string) {
     console.log(`Contents for ${this.downloadUrl}:`);
     text.split('\n').forEach(e => this.processLine(e));
@@ -53,7 +57,7 @@ export class DownloaderComponent implements OnInit {
     if (!text.startsWith('#')) {
       if (this.downloadLimit > 0) {
         const localName = text.replace(/\//g, '_');
-        console.log(`Get: ${this.baseUrl}/${text} as ${localName}`);
+        this.downloadFile(`${this.baseUrl}/${text}`, localName);
         --this.downloadLimit;
       }
     } else {
