@@ -1,30 +1,6 @@
 # Downloader
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.5.0.
-
-## Development server
-
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
-
-## Code scaffolding
-
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `-prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+Downloader for streaming files indexed in an M3U8 file.
 
 ## Howto decode
 
@@ -34,8 +10,24 @@ Obtain Key:
 
 Decrypt:
 
-	openssl enc -d -p -aes-128-cbc -nopad -in 42.ts -out decoded2.ts -K KEY -iv 06598c2f673f448aefe8745da6b862dd
+	openssl enc -d -p -aes-128-cbc -nopad \
+	            -in ENCRYPTED.ts -out OPEN.ts \
+	            -K KEY -iv 06598c2f673f448aefe8745da6b862dd
 
 Convert:
 
 	ffmpeg -i all.ts -acodec copy -vcodec copy all.mp4
+
+## Prerequisites
+CORS needs to be disabled for this downloader to work with certain streaming providers.
+Recommended plug-in:
+* https://chrome.google.com/webstore/detail/moesif-origin-cors-change/digfbfaphojjndkpccljibejjbppifbc?hl=en
+  * Set `Access-Control-Allow-Origin` to the URL of this program (no wildcards!)
+  * Set `Access-Control-Allow-Credentials` to `true`
+
+## Related Projects
+### NHL.DL
+* https://github.com/caseyfw/nhldl
+* https://www.reddit.com/r/NHLStreams/comments/45coy2/i_made_a_script_for_downloading_streams_not/
+
+Cool stuff deleting commercial breaks!!
