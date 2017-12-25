@@ -29,6 +29,6 @@ export class DownloaderComponent implements OnInit {
   getKey() {
     console.log(`Now getting key ${this.downloadUrl}`);
     this.downloadService.getKey(this.downloadUrl)
-      .subscribe(buffer => console.log(`Seen: ${buffer}`));
+      .subscribe(buffer => FileSaver.saveAs(new Blob([buffer]), `${DownloaderComponent.basename(this.downloadUrl)}.key`));
   }
 }
