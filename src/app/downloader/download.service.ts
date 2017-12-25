@@ -10,11 +10,11 @@ export class DownloadService {
   constructor(private http: HttpClient) { }
 
   public getFile(path: string): Observable<Blob> {
-    return this.http.get(path, {responseType: 'blob'}).retry(100);
+    return this.http.get(path, {responseType: 'blob'}).retry(3);
   }
 
   public getKey(path: string): Observable<string> {
-    return this.http.get(path, {responseType: 'arraybuffer', withCredentials: true})
+    return this.http.get(path, {responseType: 'arraybuffer', withCredentials: true}).retry(3)
       .map(buffer => Array.from(new Uint8Array(buffer)))
       .map(array => array.map(e => ('0' + e.toString(16)).substr(-2)).join(''));
   }

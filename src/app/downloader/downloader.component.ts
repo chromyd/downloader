@@ -14,7 +14,11 @@ export class DownloaderComponent implements OnInit {
   lastKeyUrl = '';
   baseUrl = '';
 
-  downloadLimit = 10;
+  downloadLimit = 3;
+
+  remainingCount = -1;
+  downloadCount = 0;
+  failedCount = 0;
 
   constructor(private downloadService: DownloadService) { }
 
@@ -45,20 +49,46 @@ export class DownloaderComponent implements OnInit {
   }
 
   downloadFile(url: string, localName: string) {
-    this.downloadService.getFile(url).subscribe(fileData => FileSaver.saveAs(fileData, localName));
+    this.downloadService.getFile(url).subscribe(
+      fileData => this.onDownloadSucceeded(fileData, localName),
+      error => this.onDownloadFailed(url, error)
+    );
+  }
+
+  private onDownloadSucceeded(fileData: Blob, localName: string) {
+    --this.remainingCount;
+    ++this.downloadCount;
+    FileSaver.saveAs(fileData, localName);
+  }
+
+  private onDownloadFailed(url: string, error: Error) {
+    --this.remainingCount;
+    ++this.failedCount;
+    console.log(`Failed to download ${url}: ${error}`);
   }
 
   processList(text: string) {
     console.log(`Contents for ${this.downloadUrl}:`);
+    this.prepare(text);
     text.split('\n').forEach(e => this.processLine(e));
   }
 
+  prepare(text: string) {
+    this.remainingCount = text.split('\n').filter(e => e && !e.startsWith('#')).length;
+/*
+    text.split('\n')
+      .filter(e => !e.startsWith('#'))
+      .filter(e => e.indexOf('.ts') === -1)
+      .forEach(e => console.log('E:' + e));
+      */
+  }
+
   processLine(text: string) {
-    if (!text.startsWith('#')) {
+    if (text && !text.startsWith('#')) {
       if (this.downloadLimit > 0) {
         const localName = text.replace(/\//g, '_');
         this.downloadFile(`${this.baseUrl}/${text}`, localName);
-        --this.downloadLimit;
+        // --this.downloadLimit;
       }
     } else {
       const [, keyUrl, iv] = this.keyPattern.exec(text) || [, null, null];
