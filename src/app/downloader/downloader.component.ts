@@ -12,6 +12,9 @@ export class DownloaderComponent implements OnInit {
   keyPattern = /^#EXT-X-KEY.*URI="([^"]*)".*IV=0x(.*)/;
   downloadUrl = '';
   lastKeyUrl = '';
+  baseUrl = '';
+
+  downloadLimit = 10;
 
   constructor(private downloadService: DownloadService) { }
 
@@ -26,6 +29,8 @@ export class DownloaderComponent implements OnInit {
     console.log(`Now downloading ${this.downloadUrl}`);
     const subject = this.downloadService.getFile(this.downloadUrl);
     const reader = new FileReader();
+
+    this.baseUrl = this.downloadUrl.substr(0, this.downloadUrl.lastIndexOf('/'));
 
     reader.onload = () => this.processList(reader.result);
 
@@ -45,11 +50,20 @@ export class DownloaderComponent implements OnInit {
   }
 
   processLine(text: string) {
-    const [, keyUrl, iv] = this.keyPattern.exec(text) || [, null, null];
-    if (keyUrl && keyUrl !== this.lastKeyUrl) {
-      console.log(`URL=${keyUrl}, IV=${iv}`);
-      this.getKey(keyUrl);
-      this.lastKeyUrl = keyUrl;
+    if (!text.startsWith('#')) {
+      if (this.downloadLimit > 0) {
+        const localName = text.replace(/\//g, '_');
+        console.log(`Get: ${this.baseUrl}/${text} as ${localName}`);
+        --this.downloadLimit;
+      }
+    } else {
+      const [, keyUrl, iv] = this.keyPattern.exec(text) || [, null, null];
+
+      if (keyUrl && keyUrl !== this.lastKeyUrl) {
+        console.log(`URL=${keyUrl}, IV=${iv}`);
+        this.getKey(keyUrl);
+        this.lastKeyUrl = keyUrl;
+      }
     }
   }
 }
