@@ -1,6 +1,6 @@
 <div>
   <label>URL</label>
-  <input [(ngModel)]="downloadUrl" placeholder="downloadUrl">
+  <input [(ngModel)]="downloadUrl" placeholder="downloadUrl" #keyUrl>
   <button (click)="download()">Download</button>
-  <button (click)="getKey()">Get Key</button>
+  <button (click)="getKey(keyUrl.value)">Get Key</button>
 </div>

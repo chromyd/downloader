@@ -9,7 +9,9 @@ import {DownloadService} from './download.service';
 })
 export class DownloaderComponent implements OnInit {
 
+  keyPattern = /^#EXT-X-KEY.*URI="([^"]*)".*IV=0x(.*)/;
   downloadUrl = '';
+  lastKeyUrl = '';
 
   constructor(private downloadService: DownloadService) { }
 
@@ -31,14 +33,23 @@ export class DownloaderComponent implements OnInit {
     subject.subscribe( fileData => reader.readAsText(fileData));
   }
 
-  getKey() {
-    console.log(`Now getting key ${this.downloadUrl}`);
-    this.downloadService.getKey(this.downloadUrl)
-      .subscribe(buffer => FileSaver.saveAs(new Blob([buffer]), `${DownloaderComponent.basename(this.downloadUrl)}.key`));
+  getKey(url: string) {
+    console.log(`Now getting key ${url}`);
+    this.downloadService.getKey(url)
+      .subscribe(buffer => FileSaver.saveAs(new Blob([buffer]), `${DownloaderComponent.basename(url)}.key`));
   }
 
   processList(text: string) {
     console.log(`Contents for ${this.downloadUrl}:`);
-    text.split('\n').forEach(e => console.log(`L: ${e}`));
+    text.split('\n').forEach(e => this.processLine(e));
+  }
+
+  processLine(text: string) {
+    const [, keyUrl, iv] = this.keyPattern.exec(text) || ['', '', ''];
+    if (keyUrl && keyUrl !== this.lastKeyUrl) {
+      console.log(`URL=${keyUrl}, IV=${iv}`);
+      this.getKey(keyUrl);
+      this.lastKeyUrl = keyUrl;
+    }
   }
 }
