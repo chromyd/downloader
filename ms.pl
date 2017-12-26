@@ -11,12 +11,11 @@ sub main() {
 
   my $OUT_FILENAME="all.ts";
 
-  #print "Expecting $TOTAL files\n";
-
   open(my $in, '<', $ARGV[0]);
   open(my $out, '>', $OUT_FILENAME);
 
   while (<$in>) {
+    chomp;
 
     if (/^#EXT-X-KEY.*\/([^"]*)".*IV=0x(.*)/) {
       $keyfile = "$1";
@@ -26,9 +25,9 @@ sub main() {
     if (/^[^#]/) {
       ++$done;
       s/\//_/g;
-      #print "Extract with $keyfile $iv from $_";
+      my $key = `cat $keyfile.key`;
       printf("Progress: %3d%%\r", 100 * $done/$TOTAL);
-      print $out `ls $_` || die;
+      print $out `openssl enc -d -aes-128-cbc -nopad -in $_ -K $key -iv $iv` || die;
     }
   }
   close($in);
