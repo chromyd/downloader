@@ -10,7 +10,7 @@ export class DownloadService {
   constructor(private http: HttpClient) { }
 
   public getFile(path: string): Observable<Blob> {
-    return this.http.get(path, {responseType: 'blob'}).retry(3);
+    return this.http.get(path, {responseType: 'blob'}).retry(8);
   }
 
   public getKey(path: string): Observable<string> {

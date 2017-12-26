@@ -28,3 +28,16 @@ button:disabled {
   color: #ccc;
   cursor: auto;
 }
+#downloadProgress {
+  width: 95%;
+  margin: 30px;
+  background-color: lightgrey;
+}
+#downloadBar {
+  width: 0;
+  height: 30px;
+  background-color: dodgerblue;
+  text-align: center; /* To center it horizontally (if you want) */
+  line-height: 30px; /* To center it vertically */
+  color: white;
+}

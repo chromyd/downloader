@@ -3,11 +3,8 @@
   <input [(ngModel)]="downloadUrl" placeholder="downloadUrl" #keyUrl>
   <button (click)="download()">Download</button>
 </div>
-<div>
-  <label>Remaining: {{remainingCount}}</label>
-</div>
-<div>
-  <label>Downloaded: {{downloadCount}}</label>
+<div id="downloadProgress">
+  <div id="downloadBar" [style.width]="getProgress() | percent:'1.1-1'">{{getProgress() | percent:'1.2-2'}}</div>
 </div>
 <div>
   <label>Failed: {{failedCount}}</label>

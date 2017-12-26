@@ -16,8 +16,8 @@ export class DownloaderComponent implements OnInit {
 
   downloadLimit = 3;
 
-  remainingCount = -1;
-  downloadCount = 0;
+  totalCount = 1;
+  downloadedCount = 0;
   failedCount = 0;
 
   constructor(private downloadService: DownloadService) { }
@@ -30,7 +30,6 @@ export class DownloaderComponent implements OnInit {
   }
 
   download() {
-    console.log(`Now downloading ${this.downloadUrl}`);
     const subject = this.downloadService.getFile(this.downloadUrl);
     const reader = new FileReader();
 
@@ -43,7 +42,7 @@ export class DownloaderComponent implements OnInit {
   }
 
   getKey(url: string) {
-    console.log(`Now getting key ${url}`);
+    console.log(`Getting key ${url}`);
     this.downloadService.getKey(url)
       .subscribe(buffer => FileSaver.saveAs(new Blob([buffer]), `${DownloaderComponent.basename(url)}.key`));
   }
@@ -56,31 +55,26 @@ export class DownloaderComponent implements OnInit {
   }
 
   private onDownloadSucceeded(fileData: Blob, localName: string) {
-    --this.remainingCount;
-    ++this.downloadCount;
+    ++this.downloadedCount;
     FileSaver.saveAs(fileData, localName);
   }
 
   private onDownloadFailed(url: string, error: Error) {
-    --this.remainingCount;
     ++this.failedCount;
     console.log(`Failed to download ${url}: ${error}`);
   }
 
+  getProgress(): number {
+    return (this.downloadedCount + this.failedCount) / this.totalCount;
+  }
+
   processList(text: string) {
-    console.log(`Contents for ${this.downloadUrl}:`);
     this.prepare(text);
     text.split('\n').forEach(e => this.processLine(e));
   }
 
   prepare(text: string) {
-    this.remainingCount = text.split('\n').filter(e => e && !e.startsWith('#')).length;
-/*
-    text.split('\n')
-      .filter(e => !e.startsWith('#'))
-      .filter(e => e.indexOf('.ts') === -1)
-      .forEach(e => console.log('E:' + e));
-      */
+    this.totalCount = text.split('\n').filter(e => e && !e.startsWith('#')).length;
   }
 
   processLine(text: string) {
@@ -88,13 +82,11 @@ export class DownloaderComponent implements OnInit {
       if (this.downloadLimit > 0) {
         const localName = text.replace(/\//g, '_');
         this.downloadFile(`${this.baseUrl}/${text}`, localName);
-        // --this.downloadLimit;
       }
     } else {
-      const [, keyUrl, iv] = this.keyPattern.exec(text) || [, null, null];
+      const [, keyUrl] = this.keyPattern.exec(text) || [, null];
 
       if (keyUrl && keyUrl !== this.lastKeyUrl) {
-        console.log(`URL=${keyUrl}, IV=${iv}`);
         this.getKey(keyUrl);
         this.lastKeyUrl = keyUrl;
       }
