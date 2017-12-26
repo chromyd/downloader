@@ -9,7 +9,7 @@ sub main() {
   my $done = 0;
   my $TOTAL = $ARGV[1];
 
-  my $OUT_FILENAME="all.ts";
+  my $OUT_FILENAME=$ARGV[2];
 
   open(my $in, '<', $ARGV[0]);
   open(my $out, '>', $OUT_FILENAME);
@@ -32,9 +32,6 @@ sub main() {
   }
   close($in);
   close($out);
-
-  system("ffmpeg -hide_banner -v 16 -i $OUT_FILENAME -acodec copy -vcodec copy all.mp4") || die;
-  system("rm *.m3u8 *.key *_*.ts") || die;
 }
 
 main()
