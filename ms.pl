@@ -26,12 +26,15 @@ sub main() {
       ++$done;
       s/\//_/g;
       my $key = `cat $keyfile.key`;
-      printf("Progress: %3d%%\r", 100 * $done/$TOTAL);
+      printf("AES Progress: %3d%%\r", 100 * $done/$TOTAL);
       print $out `openssl enc -d -aes-128-cbc -nopad -in $_ -K $key -iv $iv` || die;
     }
   }
   close($in);
   close($out);
+
+  system("ffmpeg -hide_banner -v 16 -i $OUT_FILENAME -acodec copy -vcodec copy all.mp4") || die;
+  system("rm *.m3u8 *.key *_*.ts") || die;
 }
 
 main()
