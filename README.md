@@ -22,3 +22,4 @@ Recommended plug-in:
   * Hide failed when zero; change download bar color when non-zero
   * Allow to reload failed segments
 * Check feasibility of searching m3u8 files from the app
+* Calculate and display ETA (remaining time)
