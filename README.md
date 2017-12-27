@@ -24,3 +24,7 @@ Recommended plug-in:
 * Download to a sub-directory to allow downloading/processing more than one game at a time
 * Check feasibility of searching m3u8 files from the app
 * Calculate and display ETA (remaining time)
+* Add a button to paste the URL from clipboard
+* Download process:
+  * Disable Download button while download is in progress
+  * Reset on next download (avoid page reload workaround)
