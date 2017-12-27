@@ -2,22 +2,6 @@
 
 Downloader for streaming files indexed in an M3U8 file.
 
-## Howto decode
-
-Obtain Key:
-
-	od -An -t x1 v-2.3 | tr -d ' ' 	
-
-Decrypt:
-
-	openssl enc -d -p -aes-128-cbc -nopad \
-	            -in ENCRYPTED.ts -out OPEN.ts \
-	            -K KEY -iv 06598c2f673f448aefe8745da6b862dd
-
-Convert:
-
-	ffmpeg -i all.ts -acodec copy -vcodec copy all.mp4
-
 ## Prerequisites
 CORS needs to be disabled for this downloader to work with certain streaming providers.
 Recommended plug-in:
@@ -30,4 +14,11 @@ Recommended plug-in:
 * https://github.com/caseyfw/nhldl
 * https://www.reddit.com/r/NHLStreams/comments/45coy2/i_made_a_script_for_downloading_streams_not/
 
-Cool stuff deleting commercial breaks!!
+## TO-DOs
+* Use parts of m3u8 URL for the filename (do not use basename only as the path contains more information)
+* UI improvements:
+  * Disable Download button when no URL is entered
+  * Hide download bar before download starts
+  * Hide failed when zero; change download bar color when non-zero
+  * Allow to reload failed segments
+* Check feasibility of searching m3u8 files from the app
