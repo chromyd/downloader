@@ -21,5 +21,6 @@ Recommended plug-in:
   * Hide download bar before download starts
   * Hide failed when zero; change download bar color when non-zero
   * Allow to reload failed segments
+* Download to a sub-directory to allow downloading/processing more than one game at a time
 * Check feasibility of searching m3u8 files from the app
 * Calculate and display ETA (remaining time)
