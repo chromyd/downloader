@@ -16,6 +16,7 @@ Recommended plug-in:
 
 ## TO-DOs
 * Use parts of m3u8 URL for the filename (do not use basename only as the path contains more information)
+* decrypt and concatenate in JavaScript (with [asmcrypto/asmcrypto.js](https://github.com/asmcrypto/asmcrypto.js) and [jimmywarting/StreamSaver.js](https://github.com/jimmywarting/StreamSaver.js))
 * UI improvements:
   * Disable Download button when no URL is entered
   * Hide download bar before download starts
