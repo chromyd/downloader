@@ -3,8 +3,11 @@
   <input [(ngModel)]="downloadUrl" placeholder="downloadUrl" #keyUrl>
   <button (click)="download()">Download</button>
 </div>
-<div id="downloadProgress">
-  <div id="downloadBar" [style.width]="getProgress() | percent:'1.1-1'">{{getProgress() | percent:'1.2-2'}}</div>
+<div id="downloadProgress" (mouseenter)="detailedProgress = true" (mouseleave)="detailedProgress = false">
+  <div id="downloadBar" [style.width]="getProgress() | percent:'1.1-1'">
+    <div *ngIf="detailedProgress">{{getProgress() | percent:'1.2-2'}}</div>
+    <div *ngIf="!detailedProgress">{{getProgress() | percent}}</div>
+  </div>
 </div>
 <div>
   <label>Failed: {{failedCount}}</label>

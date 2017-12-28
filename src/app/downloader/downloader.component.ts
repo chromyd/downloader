@@ -14,6 +14,8 @@ export class DownloaderComponent implements OnInit {
   lastKeyUrl = '';
   baseUrl = '';
 
+  detailedProgress = false;
+
   downloadLimit = 3;
 
   totalCount = 1;
