@@ -16,11 +16,10 @@ export class DownloaderComponent implements OnInit {
 
   detailedProgress = false;
 
-  downloadLimit = 3;
-
   totalCount = 1;
   downloadedCount = 0;
-  failedCount = 0;
+  failedUrls: string[] = [];
+  failedKeys = 0;
 
   constructor(private downloadService: DownloadService) { }
 
@@ -46,7 +45,10 @@ export class DownloaderComponent implements OnInit {
   getKey(url: string) {
     console.log(`Getting key ${url}`);
     this.downloadService.getKey(url)
-      .subscribe(buffer => FileSaver.saveAs(new Blob([buffer]), `${DownloaderComponent.basename(url)}.key`));
+      .subscribe(
+        buffer => FileSaver.saveAs(new Blob([buffer]), `${DownloaderComponent.basename(url)}.key`),
+        () => ++this.failedKeys
+      );
   }
 
   downloadFile(url: string, localName: string) {
@@ -59,15 +61,28 @@ export class DownloaderComponent implements OnInit {
   private onDownloadSucceeded(fileData: Blob, localName: string) {
     ++this.downloadedCount;
     FileSaver.saveAs(fileData, localName);
+    this.finalReport();
   }
 
   private onDownloadFailed(url: string, error: Error) {
-    ++this.failedCount;
+    this.failedUrls.unshift(url);
     console.log(`Failed to download ${url}: ${error}`);
+    this.finalReport();
+  }
+
+  private finalReport() {
+    if (this.downloadedCount + this.failedUrls.length === this.totalCount) {
+      if (this.failedUrls) {
+        console.log('Failed downloads:');
+        this.failedUrls.forEach(url => console.log(url));
+      } else {
+        console.log('Done');
+      }
+    }
   }
 
   getProgress(): number {
-    return (this.downloadedCount + this.failedCount) / this.totalCount;
+    return (this.downloadedCount + this.failedUrls.length) / this.totalCount;
   }
 
   processList(text: string) {
@@ -81,10 +96,8 @@ export class DownloaderComponent implements OnInit {
 
   processLine(text: string) {
     if (text && !text.startsWith('#')) {
-      if (this.downloadLimit > 0) {
-        const localName = text.replace(/\//g, '_');
-        this.downloadFile(`${this.baseUrl}/${text}`, localName);
-      }
+      const localName = text.replace(/\//g, '_');
+      this.downloadFile(`${this.baseUrl}/${text}`, localName);
     } else {
       const [, keyUrl] = this.keyPattern.exec(text) || [, null];
 

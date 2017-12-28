@@ -9,7 +9,9 @@
     <div *ngIf="!detailedProgress">{{getProgress() | percent}}</div>
   </div>
 </div>
-<div>
-  <label>Failed: {{failedCount}}</label>
+<div *ngIf="failedUrls.length + failedKeys > 0">
+  <label>Failed segments: {{failedUrls.length}}</label>
+  <br>
+  <label>Failed keys: {{failedKeys}}</label>
 </div>
 

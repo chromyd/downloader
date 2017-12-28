@@ -47,6 +47,6 @@ ffmpeg -v error -i $FINAL_TS -c copy -bsf:a aac_adtstoasc $FINAL_MP4 &&
 
 echo "Removing intermediate files..." &&
 
-rm -f *.m3u8 *.key $OUTPUT *_*.ts *.txt &&
+rm -f *.m3u8 *.key *_*.ts *.txt &&
 
 echo Done
