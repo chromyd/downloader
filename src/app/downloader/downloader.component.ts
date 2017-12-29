@@ -72,7 +72,7 @@ export class DownloaderComponent implements OnInit {
 
   private finalReport() {
     if (this.downloadedCount + this.failedUrls.length === this.totalCount) {
-      if (this.failedUrls) {
+      if (this.failedUrls.length > 0) {
         console.log('Failed downloads:');
         this.failedUrls.forEach(url => console.log(url));
       } else {
