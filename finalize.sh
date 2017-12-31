@@ -2,6 +2,27 @@
 #
 # Decrypt and concatenates all parts based on the M3U8 file, then invokes post-processing
 
+function find_game_start()
+{
+	local INPUT=$1
+	local FROM=$2
+	local GUESS=240
+	local IDX=0
+
+	while [ $IDX -lt $GUESS ];
+	do
+		local POS
+		for POS in $(($GUESS + $FROM - $IDX)) $(($GUESS + $FROM + $IDX + 1))
+		do
+			ffmpeg -v fatal -nostdin -ss $POS -i $INPUT -vframes 1 -f image2 - |
+			tesseract stdin stdout 2>/dev/null |
+			egrep -qi 'officials|referee|linesman|linesmen' && echo $POS && return
+		done
+		let 'IDX += 1'
+	done
+	echo 0
+}
+
 INPUT=${2:-~/ChromeDownloads/*.m3u8}
 OUTPUT=all.ts
 
@@ -21,7 +42,9 @@ SILENCE=silence.txt
 
 ffmpeg -nostats -i $OUTPUT -filter_complex "[0:a]silencedetect=n=-50dB:d=10[outa]" -map [outa] -f s16le -y /dev/null &> $SILENCE_RAW &&
 
-echo "Creating break-free segments..." &&
+FROM=$(grep -m 1 silence_end $SILENCE_RAW | cut -f 5 -d ' ' | awk '{printf "%d\n",$0}') &&
+
+echo "Detecting game start & Creating break-free segments..." &&
 grep "^\[silence" $SILENCE_RAW | sed "s/^\[silencedetect.*\] //" > $SILENCE &&
 
 # If the stream does not end in silence then
@@ -62,13 +85,15 @@ INIT { $delayed_ss = $delayed_se = 0; }
 }' |
 
 # Split into segments without ad breaks.
-OUTPUT=$OUTPUT perl -ne '
+OUTPUT=$OUTPUT GAME_START=$(find_game_start $OUTPUT $FROM) perl -ne '
+use List::Util ('max');
 INIT { $last_se = 0; $index = 0; }
 {
 	if (/^silence_start: (\S+) \| silence_end: (\S+) \| silence_duration: (\S+)/) {
 		$ss = $1;
 		if ($last_se != 0) {
-			printf "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $last_se, ($ss - $last_se), $index++;
+			$gs = max($last_se, $ENV{GAME_START});
+			printf "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $gs, ($ss - $gs), $index++;
 		}
 		$last_se = $2;
 	}
@@ -79,17 +104,12 @@ INIT { $last_se = 0; $index = 0; }
 sh &&
 
 echo "Merging break-free segments..." &&
-FINAL_TS=${1:-final}.ts
-
-echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy $FINAL_TS | sh &&
-
-echo "Re-encoding audio..." &&
 FINAL_MP4=${1:-final}.mp4
 
-ffmpeg -v error -i $FINAL_TS -c copy -bsf:a aac_adtstoasc $FINAL_MP4 &&
+echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy $FINAL_MP4 | sh &&
 
 echo "Removing intermediate files..." &&
 
-rm -f *.m3u8 *.key *_*.ts *.txt $FINAL_TS &&
+rm -f *.m3u8 *.key *_*.ts *.txt &&
 
 echo Done
