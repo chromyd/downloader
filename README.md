@@ -3,7 +3,7 @@
 Freestream (formerly dubbed "Downloader") downloads all HTTP stream files for a specified M3U playlist.
 
 ## Prerequisites
-CORS needs to be disabled for Freastream to work with certain streaming providers.
+CORS needs to be disabled for Freestream to work with certain streaming providers.
 Recommended plug-in:
 * https://chrome.google.com/webstore/detail/moesif-origin-cors-change/digfbfaphojjndkpccljibejjbppifbc?hl=en
   * Set `Access-Control-Allow-Origin` to the URL of this program (no wildcards!)
