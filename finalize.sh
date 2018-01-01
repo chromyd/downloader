@@ -25,22 +25,21 @@ function find_game_start()
 
 INPUT=${2:-~/ChromeDownloads/*.m3u8}
 FINAL_MP4=${1:-final}.mp4
+SILENCE_RAW=silence_raw.txt
+SILENCE=silence.txt
 
 OUTPUT=all.ts
 
-cd $(dirname $INPUT)
-echo Processing $INPUT to produce $FINAL_MP4
+cd $(dirname $INPUT) &&
+echo Processing $INPUT to produce $FINAL_MP4 &&
 
-test -s $OUTPUT || perl $(dirname $0)/decode.pl $INPUT $(grep -v '^#' $INPUT | wc -l) $OUTPUT
+test -s $OUTPUT || perl $(dirname $0)/decode.pl $INPUT $(grep -v '^#' $INPUT | wc -l) $OUTPUT &&
 
 # The following ad-break processing is inspired by https://github.com/caseyfw/nhldl/blob/master/nhldl.sh
 
-echo "Detecting blank commercial breaks..."
+echo "Detecting blank commercial breaks..." &&
 # Detect silences that indicate ads.
 # |& not working on osx 10.10.5 converted to two stage
-
-SILENCE_RAW=silence_raw.txt
-SILENCE=silence.txt
 
 ffmpeg -nostats -i $OUTPUT -filter_complex "[0:a]silencedetect=n=-50dB:d=10[outa]" -map [outa] -f s16le -y /dev/null &> $SILENCE_RAW &&
 
@@ -51,8 +50,8 @@ grep "^\[silence" $SILENCE_RAW | sed "s/^\[silencedetect.*\] //" > $SILENCE &&
 
 # If the stream does not end in silence then
 # Add a final silence_start to the slience file, ensuring last segment is kept.
-tail -1 $SILENCE | grep -q silence_end &&
-echo "silence_start: $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $OUTPUT)" >> $SILENCE
+(tail -1 $SILENCE | grep -q silence_end &&
+echo "silence_start: $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $OUTPUT)" >> $SILENCE) || true &&
 
 # Merge silence lines into single line for each silence segment
 awk '
