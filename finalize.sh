@@ -62,9 +62,12 @@ BEGIN { line = "" }
 END { if (line != "") print line " | silence_end: 0 | silence_duration: 0" }
 ' $SILENCE |
 
-# Merge consecutive silences exceeding specific length (interpreted as ads within intermissions)
+# Merge consecutive silences exceeding specific length (interpreted as ads within intermissions) and extend their duration to the preset lengths
 perl -ne '
-INIT { $delayed_ss = $delayed_se = 0; }
+INIT {
+  $delayed_ss = $delayed_se = $iidx = 0;
+  @intermission_durations = (1080, 1080, (900) x 20);
+}
 {
 	if (/^silence_start: (\S+) \| silence_end: (\S+) \| silence_duration: (\S+)/) {
 		if ($3 > 116) {
@@ -78,7 +81,15 @@ INIT { $delayed_ss = $delayed_se = 0; }
 				print $_;
 			}
 			else {
-				printf "silence_start: %.2f | silence_end: %.2f | silence_duration: %.3f (merged)\n", $delayed_ss, $delayed_se, ($delayed_se - $delayed_ss);
+			  $break_duration = $delayed_se - $delayed_ss;
+			  if ($break_duration > $intermission_durations[$iidx]) {
+			    die "Excessive break detected at $delayed_ss lasting $break_duration seconds";
+			  }
+			  if ($break_duration > $intermission_durations[$iidx] - 300) {
+			    $break_duration = $intermission_durations[$iidx] - 20;
+  				++$iidx;
+			  }
+				printf "silence_start: %.2f | silence_end: %.2f | silence_duration: %.3f (delayed)\n", $delayed_ss, $delayed_ss + $break_duration, $break_duration;
 				print $_;
 			}
 			$delayed_ss = 0;
@@ -107,7 +118,7 @@ sh &&
 
 echo "Merging break-free segments..." &&
 
-echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy $FINAL_MP4 | sh &&
+echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy -y $FINAL_MP4 | sh &&
 
 echo "Removing intermediate files..." &&
 
