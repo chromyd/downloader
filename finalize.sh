@@ -51,7 +51,7 @@ grep "^\[silence" $SILENCE_RAW | sed "s/^\[silencedetect.*\] //" > $SILENCE &&
 # If the stream does not end in silence then
 # Add a final silence_start to the slience file, ensuring last segment is kept.
 (tail -1 $SILENCE | grep -q silence_end &&
-echo "silence_start: $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $OUTPUT)" >> $SILENCE) || true &&
+echo "silence_start: $(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $OUTPUT)" >> $SILENCE || true) &&
 
 # Merge silence lines into single line for each silence segment
 awk '
