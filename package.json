@@ -1,6 +1,6 @@
 {
-  "name": "downloader",
-  "version": "0.0.0",
+  "name": "freestream",
+  "version": "0.0.1",
   "license": "MIT",
   "scripts": {
     "ng": "ng",
