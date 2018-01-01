@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Decrypt and concatenates all parts based on the M3U8 file, then invokes post-processing
+# Decrypts and concatenates all parts based on the M3U8 file, then invokes post-processing
 
 function find_game_start()
 {
@@ -24,12 +24,14 @@ function find_game_start()
 }
 
 INPUT=${2:-~/ChromeDownloads/*.m3u8}
+FINAL_MP4=${1:-final}.mp4
+
 OUTPUT=all.ts
 
 cd $(dirname $INPUT)
-echo Processing $INPUT in $(pwd)
+echo Processing $INPUT to produce $FINAL_MP4
 
-perl $(dirname $0)/decode.pl $INPUT $(grep -v '^#' $INPUT | wc -l) $OUTPUT &&
+test -s $OUTPUT || perl $(dirname $0)/decode.pl $INPUT $(grep -v '^#' $INPUT | wc -l) $OUTPUT
 
 # The following ad-break processing is inspired by https://github.com/caseyfw/nhldl/blob/master/nhldl.sh
 
@@ -104,7 +106,6 @@ INIT { $last_se = 0; $index = 0; }
 sh &&
 
 echo "Merging break-free segments..." &&
-FINAL_MP4=${1:-final}.mp4
 
 echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy $FINAL_MP4 | sh &&
 
