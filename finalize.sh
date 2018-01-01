@@ -6,7 +6,7 @@ function find_game_start()
 {
 	local INPUT=$1
 	local FROM=$2
-	local GUESS=240
+	local GUESS=210
 	local IDX=0
 
 	while [ $IDX -lt $GUESS ];
@@ -16,7 +16,7 @@ function find_game_start()
 		do
 			ffmpeg -v fatal -nostdin -ss $POS -i $INPUT -vframes 1 -f image2 - |
 			tesseract stdin stdout 2>/dev/null |
-			egrep -qi 'officials|referee|linesman|linesmen' && echo $POS && return
+			egrep -qi 'officials|referee|linesman|linesmen|crawford|forsberg|glass' && echo $POS && return
 		done
 		let 'IDX += 1'
 	done
