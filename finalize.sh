@@ -6,21 +6,26 @@ function find_game_start()
 {
 	local INPUT=$1
 	local FROM=$2
-	local GUESS=210
+	local RANGE=480
 	local IDX=0
+	local REF_AT=0
+	local GOALIE_AT=0
 
-	while [ $IDX -lt $GUESS ];
+	while [ $IDX -lt $RANGE ];
 	do
-		local POS
-		for POS in $(($GUESS + $FROM - $IDX)) $(($GUESS + $FROM + $IDX + 1))
-		do
-			ffmpeg -v fatal -nostdin -ss $POS -i $INPUT -vframes 1 -f image2 - |
-			tesseract stdin stdout 2>/dev/null |
-			egrep -qi 'officials|referee|linesman|linesmen|crawford|forsberg|glass' && echo $POS && return
-		done
+		local POS=$((FROM + IDX))
+		local TEXT=$(ffmpeg -v fatal -nostdin -ss $POS -i $INPUT -vframes 1 -f image2 - | tesseract stdin stdout 2>/dev/null)
+		echo $TEXT | egrep -qi 'officials|referee|linesman|linesmen' && REF_AT=$POS
+		echo $TEXT | egrep -qi 'losses|shutouts|crawford|forsberg|glass' && GOALIE_AT=$POS
 		let 'IDX += 1'
 	done
-	echo 0
+
+	if [ $((REF_AT - GOALIE_AT)) -gt 42 -a $GOALIE_AT -gt 0 -o $REF_AT -eq 0 ];
+	then
+	  echo $GOALIE_AT
+	else
+	  echo $REF_AT
+	fi
 }
 
 INPUT=${2:-~/ChromeDownloads/*.m3u8}
