@@ -112,6 +112,9 @@ INIT { $last_se = 0; $index = 0; }
 			$gs = max($last_se, $ENV{GAME_START});
 			printf "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $gs, ($ss - $gs), $index++;
 		}
+		else {
+			printf "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $ss, 120, 900;
+		}
 		$last_se = $2;
 	}
 	else {
@@ -120,9 +123,14 @@ INIT { $last_se = 0; $index = 0; }
 }' |
 sh &&
 
+for i in {901..999}
+do
+  ln b_900.ts b_$i.ts || exit
+done
+
 echo "Merging break-free segments..." &&
 
-echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy -y $FINAL_MP4 | sh &&
+echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy -y -t 14400 $FINAL_MP4 | sh &&
 
 echo "Removing intermediate files..." &&
 
