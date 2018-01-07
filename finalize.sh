@@ -130,7 +130,9 @@ done
 
 echo "Merging break-free segments..." &&
 
-echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy -y -t 14400 $FINAL_MP4 | sh &&
+MONTH==$(date +%m)
+((MONTH >=4 && MONTH < 9)) && LENGTH=14400 || LENGTH=7200
+echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy -y -t $LENGTH $FINAL_MP4 | sh &&
 
 echo "Removing intermediate files..." &&
 
