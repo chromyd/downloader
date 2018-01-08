@@ -1,7 +1,6 @@
 <div>
-  <label>m3u8</label>
-  <input [(ngModel)]="downloadUrl" placeholder="downloadUrl" #keyUrl>
-  <button (click)="download()">Download</button>
+  <div id="button"><button (click)="download()">Download</button></div>
+  <div id="input"><input [(ngModel)]="downloadUrl" placeholder="downloadUrl" #keyUrl></div>
 </div>
 <div id="downloadProgress" (mouseenter)="detailedProgress = true" (mouseleave)="detailedProgress = false">
   <div id="downloadBar" [style.width]="getProgress() | percent:'1.1-1'">

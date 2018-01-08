@@ -1,6 +1,6 @@
 # Freestream
 
-Freestream (formerly dubbed "Downloader") downloads all HTTP stream files for a specified M3U playlist.
+Freestream downloads all HTTP stream files for a specified M3U playlist.
 
 ## Prerequisites
 CORS needs to be disabled for Freestream to work with certain streaming providers.
