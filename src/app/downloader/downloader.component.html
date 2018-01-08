@@ -1,12 +1,15 @@
-<div>
-  <div id="button"><button (click)="download()">Download</button></div>
-  <div id="input"><input [(ngModel)]="downloadUrl" placeholder="downloadUrl" #keyUrl></div>
+<div id="inputGroup">
+  <div id="button"><button (click)="download()" [disabled]="downloading">Download</button></div>
+  <div id="input"><input [(ngModel)]="downloadUrl" [disabled]="downloading" placeholder="downloadUrl" #keyUrl></div>
 </div>
-<div id="downloadProgress" (mouseenter)="detailedProgress = true" (mouseleave)="detailedProgress = false">
-  <div id="downloadBar" [style.width]="getProgress() | percent:'1.1-1'">
+<div id="downloadProgress" (mouseenter)="detailedProgress = true" (mouseleave)="detailedProgress = false" *ngIf="downloading">
+  <div id="downloadBar" [style.width]="getProgress() | percent:'1.1-1'" [style.background-color]="getProgressBarColor()">
     <div *ngIf="detailedProgress">{{getProgress() | percent:'1.2-2'}}</div>
     <div *ngIf="!detailedProgress">{{getProgress() | percent}}</div>
   </div>
+</div>
+<div id="result" [style.background-color]="getResultColor()" *ngIf="message">
+{{message}}
 </div>
 <div *ngIf="failedUrls.length + failedKeys > 0">
   <label>Failed segments: {{failedUrls.length}}</label>

@@ -15,20 +15,20 @@ button {
   width: 100%;
 }
 button:hover {
-  background-color: deeppink;
+  background-color: royalblue;
   color: white;
-}
-button:focus {
-  outline: 0;
 }
 button:active {
   position: relative;
-  top: 1px;
+  top: 5px;
 }
 button:disabled {
   background-color: #eee;
   color: #ccc;
   cursor: auto;
+}
+#inputGroup {
+  margin-bottom: 20px;
 }
 #input {
   margin-right: 106px;
@@ -39,15 +39,20 @@ button:disabled {
   width: 100px;
 }
 #downloadProgress {
-  margin-top: 20px;
-  margin-bottom: 20px;
   background-color: lightgrey;
 }
 #downloadBar {
   width: 0;
   height: 30px;
-  background-color: dodgerblue;
   text-align: center; /* To center it horizontally (if you want) */
   line-height: 30px; /* To center it vertically */
   color: white;
+}
+#result {
+  border-radius: 12px;
+  margin-bottom: 20px;
+  padding: 8px;
+  color: white;
+  text-align: center;
+  font: 18px Arial, sans-serif;
 }

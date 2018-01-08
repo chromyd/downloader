@@ -21,6 +21,10 @@ export class DownloaderComponent implements OnInit {
   failedUrls: string[] = [];
   failedKeys = 0;
 
+  keySuccess = false;
+  message = '';
+  downloading = false;
+
   constructor(private downloadService: DownloadService) { }
 
   static basename(url: string): string {
@@ -31,6 +35,7 @@ export class DownloaderComponent implements OnInit {
   }
 
   download() {
+    this.reset();
     const subject = this.downloadService.getFile(this.downloadUrl);
     const reader = new FileReader();
 
@@ -42,13 +47,27 @@ export class DownloaderComponent implements OnInit {
     subject.subscribe( fileData => reader.readAsText(fileData));
   }
 
+  private reset() {
+    this.totalCount = 1;
+    this.downloadedCount = this.failedKeys = 0;
+    this.failedUrls = [];
+    this.keySuccess = false;
+    this.message = '';
+    this.downloading = true;
+  }
+
   getKey(url: string) {
     console.log(`Getting key ${url}`);
     this.downloadService.getKey(url)
       .subscribe(
-        buffer => FileSaver.saveAs(new Blob([buffer]), `${DownloaderComponent.basename(url)}.key`),
+        buffer => this.onKeySucceeded(new Blob([buffer]), `${DownloaderComponent.basename(url)}.key`),
         () => ++this.failedKeys
       );
+  }
+
+  private onKeySucceeded(keyData: Blob, localName: string) {
+    this.keySuccess = true;
+    FileSaver.saveAs(keyData, localName);
   }
 
   downloadFile(url: string, localName: string) {
@@ -72,17 +91,30 @@ export class DownloaderComponent implements OnInit {
 
   private finalReport() {
     if (this.downloadedCount + this.failedUrls.length === this.totalCount) {
+      this.downloading = false;
       if (this.failedUrls.length > 0) {
         console.log('Failed downloads:');
         this.failedUrls.forEach(url => console.log(url));
+        this.message = 'Not all segments were downloaded.';
+      } else if (this.failedKeys > 0) {
+        this.message = 'Not all keys were downloaded.';
       } else {
         console.log('Done');
+        this.message = 'Finished';
       }
     }
   }
 
   getProgress(): number {
     return (this.downloadedCount + this.failedUrls.length) / this.totalCount;
+  }
+
+  getProgressBarColor(): string {
+    return (this.keySuccess) ? 'dodgerblue' : 'deeppink';
+  }
+
+  getResultColor(): string {
+    return (this.message === 'Finished') ? 'teal' : 'crimson';
   }
 
   processList(text: string) {
