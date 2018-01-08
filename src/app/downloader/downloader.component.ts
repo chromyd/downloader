@@ -34,6 +34,15 @@ export class DownloaderComponent implements OnInit {
   ngOnInit() {
   }
 
+  processUrl() {
+    this.downloadUrl = this.downloadUrl
+      .replace('450K/450_', '3500K/3500_')
+      .replace('800K/800_', '3500K/3500_')
+      .replace('1200K/1200_', '3500K/3500_')
+      .replace('1800K/1800_', '3500K/3500_')
+      .replace('2500K/2500_', '3500K/3500_');
+  }
+
   download() {
     this.reset();
     const subject = this.downloadService.getFile(this.downloadUrl);
