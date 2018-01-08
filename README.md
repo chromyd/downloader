@@ -4,10 +4,32 @@ Freestream (formerly dubbed "Downloader") downloads all HTTP stream files for a 
 
 ## Prerequisites
 CORS needs to be disabled for Freestream to work with certain streaming providers.
+
 Recommended plug-in:
-* https://chrome.google.com/webstore/detail/moesif-origin-cors-change/digfbfaphojjndkpccljibejjbppifbc?hl=en
-  * Set `Access-Control-Allow-Origin` to the URL of this program (no wildcards!)
-  * Set `Access-Control-Allow-Credentials` to `true`
+- https://chrome.google.com/webstore/detail/resource-override/pkoacgokdfckfpndoffpifphamojphii
+
+Plugin Configuration:
+```
+{
+    "data": [
+        {
+            "id": "d1",
+            "matchUrl": "*",
+            "on": true,
+            "rules": [
+                {
+                    "match": "https://mf.svc.nhl.com/ws/media/mf/v2.3/key/*",
+                    "on": true,
+                    "requestRules": "",
+                    "responseRules": "set Access-Control-Allow-Origin: http%3A%2F%2Fdusan.freeshell.org",
+                    "type": "headerRule"
+                }
+            ]
+        }
+    ],
+    "v": 1
+}
+```
 
 ## TO-DOs
 * Use parts of m3u8 URL for the filename (do not use basename only as the path contains more information)
