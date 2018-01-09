@@ -147,6 +147,6 @@ echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy 
 
 echo "Removing intermediate files..." &&
 
-rm -f *.m3u8 *.key *_*.ts *.txt &&
+rm -f $INPUT *.key *_*.ts *.txt &&
 
 test $(ls | wc -l) -ne 2 && echo WARNING: working directory contains other files!!
