@@ -127,7 +127,7 @@ export class DownloaderComponent implements OnInit {
   }
 
   getResultColor(): string {
-    return (this.message === 'Finished') ? 'teal' : 'crimson';
+    return (this.message === 'Finished') ? 'mediumseagreen' : 'crimson';
   }
 
   private processList(text: string) {
