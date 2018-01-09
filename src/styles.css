@@ -14,7 +14,7 @@ html {
   margin: 0 auto;
 }
 body {
-  background: #202e4f url("assets/braden-barwich-188016-mirrored.jpg") repeat-y;
+  background: aliceblue url("assets/braden-barwich-188016-mirrored.jpg") repeat-y;
   background-size: cover;
   margin: 2em;
 }
