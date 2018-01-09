@@ -28,12 +28,26 @@ function find_game_start()
 	fi
 }
 
-INPUT=${2:-~/ChromeDownloads/*.m3u8}
-FINAL_MP4=${1:-final}.mp4
+function get_base_name()
+{
+  if [ -e $1 ]
+  then
+    local FULL_BASE=$(basename $1)
+    echo ${FULL_BASE%%.*}
+  else
+    echo Unnamed
+  fi
+}
+
+INPUT=${1:-~/ChromeDownloads/*.m3u}
+
+BASE_NAME=$(get_base_name $INPUT)
+
+FINAL_MP4=$BASE_NAME.mp4
 SILENCE_RAW=silence_raw.txt
 SILENCE=silence.txt
 
-OUTPUT=all.ts
+OUTPUT=$BASE_NAME.ts
 
 cd $(dirname $INPUT) &&
 echo Processing $INPUT to produce $FINAL_MP4 &&
@@ -135,4 +149,4 @@ echo "Removing intermediate files..." &&
 
 rm -f *.m3u8 *.key *_*.ts *.txt &&
 
-echo Done
+test $(ls | wc -l) -ne 2 && echo WARNING: working directory contains other files!!
