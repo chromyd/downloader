@@ -31,10 +31,14 @@ export class DownloaderComponent implements OnInit {
     return url.replace(/.*\/([^?]*).*/, '$1');
   }
 
+  static friendlyName(playlistUrl: string) {
+    return playlistUrl.replace(/.*NHL_GAME_VIDEO_([A-Z]{3})([A-Z]{3}).*_(20[0-9]{6})_.*/, '$3-$1@$2');
+  }
+
   ngOnInit() {
   }
 
-  processUrl() {
+  transformUrl() {
     this.downloadUrl = this.downloadUrl
       .replace('450K/450_', '3500K/3500_')
       .replace('800K/800_', '3500K/3500_')
@@ -52,7 +56,7 @@ export class DownloaderComponent implements OnInit {
 
     reader.onload = () => this.processList(reader.result);
 
-    subject.subscribe(fileData => FileSaver.saveAs(fileData, DownloaderComponent.basename(this.downloadUrl)));
+    subject.subscribe(fileData => FileSaver.saveAs(fileData, DownloaderComponent.friendlyName(this.downloadUrl)));
     subject.subscribe( fileData => reader.readAsText(fileData));
   }
 
@@ -65,7 +69,7 @@ export class DownloaderComponent implements OnInit {
     this.downloading = true;
   }
 
-  getKey(url: string) {
+  private getKey(url: string) {
     console.log(`Getting key ${url}`);
     this.downloadService.getKey(url)
       .subscribe(
@@ -79,7 +83,7 @@ export class DownloaderComponent implements OnInit {
     FileSaver.saveAs(keyData, localName);
   }
 
-  downloadFile(url: string, localName: string) {
+  private downloadFile(url: string, localName: string) {
     this.downloadService.getFile(url).subscribe(
       fileData => this.onDownloadSucceeded(fileData, localName),
       error => this.onDownloadFailed(url, error)
@@ -126,16 +130,16 @@ export class DownloaderComponent implements OnInit {
     return (this.message === 'Finished') ? 'teal' : 'crimson';
   }
 
-  processList(text: string) {
+  private processList(text: string) {
     this.prepare(text);
     text.split('\n').forEach(e => this.processLine(e));
   }
 
-  prepare(text: string) {
+  private prepare(text: string) {
     this.totalCount = text.split('\n').filter(e => e && !e.startsWith('#')).length;
   }
 
-  processLine(text: string) {
+  private processLine(text: string) {
     if (text && !text.startsWith('#')) {
       const localName = text.replace(/\//g, '_');
       this.downloadFile(`${this.baseUrl}/${text}`, localName);
