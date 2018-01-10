@@ -3,7 +3,15 @@
 Freestream downloads all HTTP stream files for a specified M3U playlist.
 
 ## Prerequisites
-CORS needs to be disabled for Freestream to work with certain streaming providers.
+### Dependencies
+```
+brew install ffmpeg
+brew install tesseract --HEAD
+```
+### Browser Plug-ins
+#### Enable CORS
+CORS needs to be enabled for Freestream to work with certain streaming providers. Because it cannot
+be enable server-side for obvious reasons, a browser-plugin is required.
 
 Recommended plug-in:
 - https://chrome.google.com/webstore/detail/resource-override/pkoacgokdfckfpndoffpifphamojphii
@@ -30,6 +38,13 @@ Plugin Configuration:
     "v": 1
 }
 ```
+#### Disable Download Bar
+The sheer number of downloads is annoying when download bar is enabled. This plugin remedies this:
+- https://chrome.google.com/webstore/detail/disable-download-bar/epnnapjdpplekmodajomjojfpeicclep
+
+## OCR Headaches
+The quality of OCR remains problematic (with Tesseract 3.05). These tips to improve OCR quality may be useful:
+- https://gist.github.com/henrik/1967035
 
 ## TO-DOs
 * Use parts of m3u8 URL for the filename (do not use basename only as the path contains more information)
