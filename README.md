@@ -11,12 +11,12 @@ brew install tesseract --HEAD
 ### Browser Plug-ins
 #### Enable CORS
 CORS needs to be enabled for Freestream to work with certain streaming providers. Because it cannot
-be enable server-side for obvious reasons, a browser-plugin is required.
+be enable server-side for obvious reasons, a browser plug-in is required.
 
 Recommended plug-in:
 - https://chrome.google.com/webstore/detail/resource-override/pkoacgokdfckfpndoffpifphamojphii
 
-Plugin Configuration:
+Plug-in Configuration:
 ```
 {
     "data": [
