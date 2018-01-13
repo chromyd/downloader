@@ -39,7 +39,6 @@ button:disabled {
   width: 100px;
 }
 #downloadProgress {
-  background-color: lightgrey;
   margin-bottom: 10px;
 }
 #downloadBar {

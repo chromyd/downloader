@@ -122,8 +122,16 @@ export class DownloaderComponent implements OnInit {
     return (this.downloadedCount + this.failedUrls.length) / this.totalCount;
   }
 
+  private keysHealthy(): boolean {
+    return this.keySuccess && this.failedKeys === 0;
+  }
+
   getProgressBarColor(): string {
-    return (this.keySuccess) ? 'dodgerblue' : 'deeppink';
+    return this.keysHealthy() ? 'dodgerblue' : 'deeppink';
+  }
+
+  getProgressColor(): string {
+    return this.keysHealthy() ? 'silver' : 'mistyrose';
   }
 
   getResultColor(): string {
