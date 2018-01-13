@@ -5,25 +5,25 @@
 function find_game_start()
 {
 	local INPUT=$1
-	local FROM=$2
-	local RANGE=480
-	local IDX=0
+	local RANGE=780
+	local POS=300
 	local REF_AT=0
 	local GOALIE_AT=0
 
-	while [ $IDX -lt $RANGE ];
+	while [ $POS -lt $RANGE ];
 	do
-		local POS=$((FROM + IDX))
 		local TEXT=$(ffmpeg -v fatal -nostdin -ss $POS -i $INPUT -vframes 1 -f image2 - | tesseract stdin stdout 2>/dev/null)
 		echo $TEXT | egrep -qi 'officials|referee|linesman|linesmen' && REF_AT=$POS
 		echo $TEXT | egrep -qi 'losses|shutouts|crawford|forsberg|glass' && GOALIE_AT=$POS
-		let 'IDX += 1'
+		let 'POS += 1'
 	done
 
 	if [ $((REF_AT - GOALIE_AT)) -gt 42 -a $GOALIE_AT -gt 0 -o $REF_AT -eq 0 ];
 	then
+	echo Game start G: $GOALIE_AT 1>&2
 	  echo $GOALIE_AT
 	else
+	echo Game start R: $REF_AT 1>&2
 	  echo $REF_AT
 	fi
 }
@@ -67,8 +67,6 @@ echo "Detecting blank commercial breaks..." &&
 
 ffmpeg -nostats -i $OUTPUT -filter_complex "[0:a]silencedetect=n=-50dB:d=10[outa]" -map [outa] -f s16le -y /dev/null &> $SILENCE_RAW &&
 
-FROM=$(grep -m 1 silence_end $SILENCE_RAW | cut -f 5 -d ' ' | awk '{printf "%d\n",$0}') &&
-
 echo "Detecting game start & Creating break-free segments..." &&
 grep "^\[silence" $SILENCE_RAW | sed "s/^\[silencedetect.*\] //" > $SILENCE &&
 
@@ -108,7 +106,7 @@ INIT {
 			  if ($break_duration > $intermission_durations[$iidx]) {
 			    die "Excessive break detected at $delayed_ss lasting $break_duration seconds";
 			  }
-			  if ($break_duration > $intermission_durations[$iidx] - 300 && $delayed_ss + $intermission_durations[$iidx] + 100 < $ENV{GAME_END}) {
+			  if ($break_duration > $intermission_durations[$iidx] - 200 && $delayed_ss + $intermission_durations[$iidx] + 100 < $ENV{GAME_END}) {
 			    $break_duration = $intermission_durations[$iidx] - 20;
   				++$iidx;
 			  }
@@ -121,14 +119,13 @@ INIT {
 }' |
 
 # Split into segments without ad breaks.
-OUTPUT=$OUTPUT GAME_START=$(find_game_start $OUTPUT $FROM) perl -ne '
-use List::Util ('max');
+OUTPUT=$OUTPUT GAME_START=$(find_game_start $OUTPUT) perl -ne '
 INIT { $last_se = 0; $index = 0; }
 {
 	if (/^silence_start: (\S+) \| silence_end: (\S+) \| silence_duration: (\S+)/) {
 		$ss = $1;
 		if ($last_se != 0) {
-			$gs = max($last_se, $ENV{GAME_START});
+			$gs = $ENV{GAME_START};
 			printf "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $gs, ($ss - $gs), $index++;
 		}
 		$last_se = $2;
