@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import * as FileSaver from 'file-saver';
 import {DownloadService} from './download.service';
 
+const FINISHED = 'Finished';
+const DOWNLOADING_KEYS = 'Downloading keys ...';
+
 @Component({
   selector: 'app-downloader',
   templateUrl: './downloader.component.html',
@@ -11,18 +14,17 @@ export class DownloaderComponent implements OnInit {
 
   keyPattern = /^#EXT-X-KEY.*URI="([^"]*)".*IV=0x(.*)/;
   downloadUrl = '';
-  lastKeyUrl = '';
   baseUrl = '';
 
   detailedProgress = false;
 
   totalCount = 1;
   failedUrls: string[] = [];
-  failedKeys = 0;
+  missingKeys: number;
 
-  keySuccess = false;
   message = '';
   downloading = false;
+  downloadingData = false;
 
   chunks: string[];
   index = 0;
@@ -64,10 +66,9 @@ export class DownloaderComponent implements OnInit {
 
   private reset() {
     this.totalCount = 1;
-    this.index = this.failedKeys = 0;
+    this.index = 0;
     this.failedUrls = [];
-    this.keySuccess = false;
-    this.message = '';
+    this.message = DOWNLOADING_KEYS;
     this.downloading = true;
   }
 
@@ -76,13 +77,18 @@ export class DownloaderComponent implements OnInit {
     this.downloadService.getKey(url)
       .subscribe(
         buffer => this.onKeySucceeded(new Blob([buffer]), `${DownloaderComponent.basename(url)}.key`),
-        () => ++this.failedKeys
+        () => this.finalReport()
       );
   }
 
   private onKeySucceeded(keyData: Blob, localName: string) {
-    this.keySuccess = true;
+    --this.missingKeys;
     FileSaver.saveAs(keyData, localName);
+    if (this.missingKeys === 0) {
+      this.message = '';
+      this.downloadingData = true;
+      this.getNextChunk();
+    }
   }
 
   private downloadFile(url: string, localName: string) {
@@ -113,16 +119,16 @@ export class DownloaderComponent implements OnInit {
   }
 
   private finalReport() {
-    this.downloading = false;
+    this.downloading = this.downloadingData = false;
     if (this.failedUrls.length > 0) {
       console.log('Failed downloads:');
       this.failedUrls.forEach(url => console.log(url));
       this.message = 'Not all segments were downloaded.';
-    } else if (this.failedKeys > 0) {
+    } else if (this.missingKeys > 0) {
       this.message = 'Not all keys were downloaded.';
     } else {
       console.log('Done');
-      this.message = 'Finished';
+      this.message = FINISHED;
     }
   }
 
@@ -131,11 +137,7 @@ export class DownloaderComponent implements OnInit {
   }
 
   private isHealthy(): boolean {
-    return this.keySuccess && this.failedKeys === 0 && this.failedUrls.length === 0;
-  }
-
-  getProgressBarColor(): string {
-    return this.isHealthy() ? 'dodgerblue' : 'deeppink';
+    return this.failedUrls.length === 0;
   }
 
   getProgressColor(): string {
@@ -143,13 +145,12 @@ export class DownloaderComponent implements OnInit {
   }
 
   getResultColor(): string {
-    return (this.message === 'Finished') ? 'seagreen' : 'crimson';
+    return (this.message === FINISHED) ? 'seagreen' : (this.message === DOWNLOADING_KEYS) ? 'slategrey' : 'crimson';
   }
 
   private processList(text: string) {
     this.prepare(text);
-    this.getNextChunk();
-    text.split('\n').forEach(e => this.processLineFishingForKeys(e));
+    this.getKeys(text);
   }
 
   private prepare(text: string) {
@@ -157,20 +158,18 @@ export class DownloaderComponent implements OnInit {
     this.totalCount = this.chunks.length;
   }
 
+  private getKeys(text: string) {
+    const keys = new Set(
+      text.split('\n')
+        .filter(line => line.startsWith('#EXT-X-KEY'))
+        .map(line => this.keyPattern.exec(line)[1])
+    );
+    this.missingKeys = keys.size;
+    keys.forEach(keyUrl => this.getKey(keyUrl));
+  }
+
   private getNextChunk() {
     const localName = this.chunks[this.index].replace(/\//g, '_');
     this.downloadFile(`${this.baseUrl}/${this.chunks[this.index]}`, localName);
-  }
-
-  private processLineFishingForKeys(text: string) {
-    if (text && !text.startsWith('#')) {
-    } else {
-      const [, keyUrl] = this.keyPattern.exec(text) || [, null];
-
-      if (keyUrl && keyUrl !== this.lastKeyUrl) {
-        this.getKey(keyUrl);
-        this.lastKeyUrl = keyUrl;
-      }
-    }
   }
 }

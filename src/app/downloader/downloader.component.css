@@ -46,6 +46,7 @@ button:disabled {
   height: 30px;
   text-align: center; /* To center it horizontally (if you want) */
   line-height: 30px; /* To center it vertically */
+  background-color: dodgerblue;
   color: white;
 }
 #result {
