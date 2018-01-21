@@ -120,12 +120,13 @@ INIT {
 
 # Split into segments without ad breaks.
 OUTPUT=$OUTPUT GAME_START=$(find_game_start $OUTPUT) perl -ne '
+use List::Util ("max");
 INIT { $last_se = 0; $index = 0; }
 {
 	if (/^silence_start: (\S+) \| silence_end: (\S+) \| silence_duration: (\S+)/) {
 		$ss = $1;
 		if ($last_se != 0) {
-			$gs = $ENV{GAME_START};
+			$gs = max($last_se, $ENV{GAME_START});
 			printf "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $gs, ($ss - $gs), $index++;
 		}
 		$last_se = $2;

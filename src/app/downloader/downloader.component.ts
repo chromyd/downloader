@@ -24,10 +24,11 @@ export class DownloaderComponent implements OnInit {
 
   message = '';
   downloading = false;
-  downloadingData = false;
+  downloadingSegments = false;
 
-  chunks: string[];
+  segments: string[];
   index = 0;
+  downloaded = 0;
 
   constructor(private downloadService: DownloadService) { }
 
@@ -66,7 +67,7 @@ export class DownloaderComponent implements OnInit {
 
   private reset() {
     this.totalCount = 1;
-    this.index = 0;
+    this.index = this.downloaded = 0;
     this.failedUrls = [];
     this.message = DOWNLOADING_KEYS;
     this.downloading = true;
@@ -85,10 +86,18 @@ export class DownloaderComponent implements OnInit {
     --this.missingKeys;
     FileSaver.saveAs(keyData, localName);
     if (this.missingKeys === 0) {
-      this.message = '';
-      this.downloadingData = true;
-      this.getNextChunk();
+      this.startDownloadingSegments();
     }
+  }
+
+  private startDownloadingSegments() {
+    this.message = '';
+    this.downloadingSegments = true;
+
+    this.doNext();
+    this.doNext();
+    // this.doNext();
+    // this.doNext();
   }
 
   private downloadFile(url: string, localName: string) {
@@ -99,8 +108,13 @@ export class DownloaderComponent implements OnInit {
   }
 
   private onDownloadSucceeded(fileData: Blob, localName: string) {
+    ++this.downloaded;
     FileSaver.saveAs(fileData, localName);
-    this.doNext();
+    if (this.downloaded + this.failedUrls.length === this.totalCount) {
+      this.finalReport();
+    } else {
+      this.doNext();
+    }
   }
 
   private onDownloadFailed(url: string, error: Error) {
@@ -110,16 +124,14 @@ export class DownloaderComponent implements OnInit {
   }
 
   private doNext() {
-    ++this.index;
     if (this.index < this.totalCount) {
-      this.getNextChunk();
-    } else {
-      this.finalReport();
+      this.getNextSegment();
+      ++this.index;
     }
   }
 
   private finalReport() {
-    this.downloading = this.downloadingData = false;
+    this.downloading = this.downloadingSegments = false;
     if (this.failedUrls.length > 0) {
       console.log('Failed downloads:');
       this.failedUrls.forEach(url => console.log(url));
@@ -133,7 +145,7 @@ export class DownloaderComponent implements OnInit {
   }
 
   getProgress(): number {
-    return this.index / this.totalCount;
+    return this.downloaded / this.totalCount;
   }
 
   private isHealthy(): boolean {
@@ -154,8 +166,8 @@ export class DownloaderComponent implements OnInit {
   }
 
   private prepare(text: string) {
-    this.chunks = text.split('\n').filter(e => e && !e.startsWith('#'));
-    this.totalCount = this.chunks.length;
+    this.segments = text.split('\n').filter(e => e && !e.startsWith('#'));
+    this.totalCount = this.segments.length;
   }
 
   private getKeys(text: string) {
@@ -168,8 +180,8 @@ export class DownloaderComponent implements OnInit {
     keys.forEach(keyUrl => this.getKey(keyUrl));
   }
 
-  private getNextChunk() {
-    const localName = this.chunks[this.index].replace(/\//g, '_');
-    this.downloadFile(`${this.baseUrl}/${this.chunks[this.index]}`, localName);
+  private getNextSegment() {
+    const localName = this.segments[this.index].replace(/\//g, '_');
+    this.downloadFile(`${this.baseUrl}/${this.segments[this.index]}`, localName);
   }
 }
