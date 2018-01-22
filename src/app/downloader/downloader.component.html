@@ -3,7 +3,7 @@
   <div id="input"><input [(ngModel)]="downloadUrl" (ngModelChange)="transformUrl()" (focus)="downloadUrl = ''" [disabled]="downloading" placeholder="M3U8" ></div>
 </div>
 <div id="downloadProgress" (mouseenter)="detailedProgress = true" (mouseleave)="detailedProgress = false" [style.background-color]="getProgressColor()" *ngIf="downloadingSegments">
-  <div id="downloadBar" [style.width]="getProgress() | percent:'1.1-1'">
+  <div id="downloadBar" [style.width]="getProgress() | percent:'1.1-1'" [style.background-color]="getProgressBarColor()">
     <div *ngIf="detailedProgress">{{getProgress() | percent:'1.2-2'}}</div>
     <div *ngIf="!detailedProgress">{{getProgress() | percent}}</div>
   </div>
@@ -12,6 +12,7 @@
 {{message}}
 </div>
 <div *ngIf="failedUrls.length > 0">
-  <label>Failed segments: {{failedUrls.length}}</label>
+  <div *ngIf="downloading"><label>Failed segments: {{failedUrls.length}}</label></div>
+  <div *ngIf="!downloading"><button (click)="retryFailedSegments()">Retry {{failedUrls.length}} failed segment(s)</button></div>
 </div>
 

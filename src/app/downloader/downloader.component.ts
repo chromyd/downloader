@@ -53,6 +53,7 @@ export class DownloaderComponent implements OnInit {
   }
 
   download() {
+    console.log(`Downloading ${this.downloadUrl}`);
     this.reset();
     const subject = this.downloadService.getFile(this.downloadUrl);
     const reader = new FileReader();
@@ -65,6 +66,14 @@ export class DownloaderComponent implements OnInit {
     subject.subscribe( fileData => reader.readAsText(fileData));
   }
 
+  retryFailedSegments() {
+    const from = this.baseUrl.length + 1;
+    const segmentList = this.failedUrls.map(s => s.substr(from)).join('\n');
+    this.reset();
+    this.prepare(segmentList);
+    this.startDownloadingSegments();
+  }
+
   private reset() {
     this.totalCount = 1;
     this.index = this.downloaded = 0;
@@ -74,7 +83,6 @@ export class DownloaderComponent implements OnInit {
   }
 
   private getKey(url: string) {
-    console.log(`Getting key ${url}`);
     this.downloadService.getKey(url)
       .subscribe(
         buffer => this.onKeySucceeded(new Blob([buffer]), `${DownloaderComponent.basename(url)}.key`),
@@ -110,17 +118,21 @@ export class DownloaderComponent implements OnInit {
   private onDownloadSucceeded(fileData: Blob, localName: string) {
     ++this.downloaded;
     FileSaver.saveAs(fileData, localName);
-    if (this.downloaded + this.failedUrls.length === this.totalCount) {
-      this.finalReport();
-    } else {
-      this.doNext();
-    }
+    this.afterDownload();
   }
 
   private onDownloadFailed(url: string, error: Error) {
     this.failedUrls.unshift(url);
     console.log(`Failed to download ${url}: ${error}`);
-    this.doNext();
+    this.afterDownload();
+  }
+
+  private afterDownload() {
+    if (this.downloaded + this.failedUrls.length === this.totalCount) {
+      this.finalReport();
+    } else {
+      this.doNext();
+    }
   }
 
   private doNext() {
@@ -133,8 +145,6 @@ export class DownloaderComponent implements OnInit {
   private finalReport() {
     this.downloading = this.downloadingSegments = false;
     if (this.failedUrls.length > 0) {
-      console.log('Failed downloads:');
-      this.failedUrls.forEach(url => console.log(url));
       this.message = 'Not all segments were downloaded.';
     } else if (this.missingKeys > 0) {
       this.message = 'Not all keys were downloaded.';
@@ -150,6 +160,10 @@ export class DownloaderComponent implements OnInit {
 
   private isHealthy(): boolean {
     return this.failedUrls.length === 0;
+  }
+
+  getProgressBarColor(): string {
+    return this.isHealthy() ? 'dodgerblue' : 'deeppink';
   }
 
   getProgressColor(): string {

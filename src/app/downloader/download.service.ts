@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/retry';
+import 'rxjs/add/operator/timeout';
 
 @Injectable()
 export class DownloadService {
@@ -10,7 +11,7 @@ export class DownloadService {
   constructor(private http: HttpClient) { }
 
   public getFile(path: string): Observable<Blob> {
-    return this.http.get(path, {responseType: 'blob'}).retry(8);
+    return this.http.get(path, {responseType: 'blob'}).timeout(15000).retry(4);
   }
 
   public getKey(path: string): Observable<string> {
