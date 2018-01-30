@@ -107,7 +107,7 @@ INIT {
 			    die "Excessive break detected at $delayed_ss lasting $break_duration seconds";
 			  }
 			  if ($break_duration > $intermission_durations[$iidx] - 200 && $delayed_ss + $intermission_durations[$iidx] + 100 < $ENV{GAME_END}) {
-			    $break_duration = $intermission_durations[$iidx] - 20;
+			    $break_duration = $intermission_durations[$iidx] - 30;
   				++$iidx;
 			  }
 				printf "silence_start: %.2f | silence_end: %.2f | silence_duration: %.3f (delayed)\n", $delayed_ss, $delayed_ss + $break_duration, $break_duration;
@@ -145,7 +145,7 @@ done
 echo "Merging break-free segments..."
 
 MONTH=$(date +%m)
-((MONTH >= 4 && MONTH < 9)) && LENGTH=14400 || LENGTH=7200
+((MONTH >= 4 && MONTH < 9)) && LENGTH=15300 || LENGTH=8100
 echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy -y -t $LENGTH $FINAL_MP4 | sh &&
 
 echo "Removing intermediate files..." &&
