@@ -1,6 +1,7 @@
 <div id="inputGroup">
   <div id="button"><button (click)="download()" [disabled]="downloading">Download</button></div>
   <div id="input"><input [(ngModel)]="downloadUrl" (ngModelChange)="transformUrl()" (focus)="downloadUrl = ''" [disabled]="downloading" placeholder="M3U8" ></div>
+  <div id="checkbox"><label class="label"><input type="checkbox" [checked]="highQuality" (change)="highQuality = !highQuality" class="checkbox">Use high quality 60fps</label></div>
 </div>
 <div id="downloadProgress" (mouseenter)="detailedProgress = true" (mouseleave)="detailedProgress = false" [style.background-color]="getProgressColor()" *ngIf="downloadingSegments">
   <div id="downloadBar" [style.width]="getProgress() | percent:'1.1-1'" [style.background-color]="getProgressBarColor()">

@@ -38,6 +38,15 @@ button:disabled {
   float: right;
   width: 100px;
 }
+input.checkbox {
+  width: auto;
+  height: auto;
+  margin-top: 10px;
+}
+label.label {
+  color: whitesmoke;
+  vertical-align: bottom;
+}
 #downloadProgress {
   margin-bottom: 10px;
 }

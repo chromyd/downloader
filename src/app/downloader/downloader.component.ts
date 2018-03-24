@@ -14,6 +14,7 @@ export class DownloaderComponent implements OnInit {
 
   keyPattern = /^#EXT-X-KEY.*URI="([^"]*)".*IV=0x(.*)/;
   downloadUrl = '';
+  highQuality = true;
   baseUrl = '';
 
   detailedProgress = false;
@@ -45,12 +46,12 @@ export class DownloaderComponent implements OnInit {
 
   transformUrl() {
     this.downloadUrl = this.downloadUrl
-      .replace('450K/450_', '5600K/5600_')
-      .replace('800K/800_', '5600K/5600_')
-      .replace('1200K/1200_', '5600K/5600_')
-      .replace('1800K/1800_', '5600K/5600_')
-      .replace('2500K/2500_', '5600K/5600_')
-      .replace('3500K/3500_', '5600K/5600_');
+      .replace('450K/450_', this.getQualitySnippet())
+      .replace('800K/800_', this.getQualitySnippet())
+      .replace('1200K/1200_', this.getQualitySnippet())
+      .replace('1800K/1800_', this.getQualitySnippet())
+      .replace('2500K/2500_', this.getQualitySnippet())
+      .replace('3500K/3500_', this.getQualitySnippet());
   }
 
   download() {
@@ -73,6 +74,10 @@ export class DownloaderComponent implements OnInit {
     this.reset();
     this.prepare(segmentList);
     this.startDownloadingSegments();
+  }
+
+  private getQualitySnippet(): string {
+    return this.highQuality ? '5600K/5600_' : '3500K/3500_';
   }
 
   private reset() {
