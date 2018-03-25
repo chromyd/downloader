@@ -46,13 +46,11 @@ function get_broadcast_end()
 
 function get_missing_segments()
 {
-	reenter=n
-	echo Checking for missing segments
+	echo "Checking for missing segments..."
 	for x in $(grep -v '^#' $INPUT)
 	do
-		test -r ${x//\//_} || reenter=y && /bin/echo -n ${x//_/\/}: && /usr/bin/curl -# -o ${x//\//_} $(cat url)$x
+		test -r ${x//\//_} || ( echo ${x//_/\/}: && /usr/bin/curl -# -o ${x//\//_} $(cat url)$x )
 	done
-	[ $reenter = y ] && get_missing_segments
 }
 
 INPUT=${1:-~/ChromeDownloads/*.m3u}
