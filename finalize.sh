@@ -44,6 +44,17 @@ function get_broadcast_end()
   ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $1
 }
 
+function get_missing_segments()
+{
+	reenter=n
+	echo Checking for missing segments
+	for x in $(grep -v '^#' $INPUT)
+	do
+		test -r ${x//\//_} || reenter=y && /bin/echo -n ${x//_/\/}: && /usr/bin/curl -# -o ${x//\//_} $(cat url)$x
+	done
+	[ $reenter = y ] && get_missing_segments
+}
+
 INPUT=${1:-~/ChromeDownloads/*.m3u}
 
 BASE_NAME=$(get_base_name $INPUT)
@@ -57,6 +68,7 @@ OUTPUT=$BASE_NAME.ts
 cd $(dirname $INPUT) &&
 echo Processing $INPUT to produce $FINAL_MP4 &&
 
+test -r url && get_missing_segments &&
 test -s $OUTPUT || perl $(dirname $0)/decode.pl $INPUT $(grep -v '^#' $INPUT | wc -l) $OUTPUT &&
 
 # The following ad-break processing is inspired by https://github.com/caseyfw/nhldl/blob/master/nhldl.sh

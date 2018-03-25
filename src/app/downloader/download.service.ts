@@ -15,7 +15,7 @@ export class DownloadService {
   }
 
   public getKey(path: string): Observable<string> {
-    return this.http.get(path, {responseType: 'arraybuffer', withCredentials: true}).retry(3)
+    return this.http.get(path, {responseType: 'arraybuffer', withCredentials: true}).timeout(5000)
       .map(buffer => Array.from(new Uint8Array(buffer)))
       .map(array => array.map(e => ('0' + e.toString(16)).substr(-2)).join(''));
   }

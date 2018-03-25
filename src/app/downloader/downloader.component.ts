@@ -28,7 +28,9 @@ export class DownloaderComponent implements OnInit {
   downloadingSegments = false;
 
   segments: string[];
+  keys: string[];
   index = 0;
+  indexKey = 0;
   downloaded = 0;
 
   constructor(private downloadService: DownloadService) { }
@@ -98,6 +100,7 @@ export class DownloaderComponent implements OnInit {
 
   private onKeySucceeded(keyData: Blob, localName: string) {
     --this.missingKeys;
+    console.log(`Successfully downloaded ${localName}, remaining keys: ${this.missingKeys}`);
     FileSaver.saveAs(keyData, localName);
     if (this.missingKeys === 0) {
       this.startDownloadingSegments();
@@ -196,12 +199,42 @@ export class DownloaderComponent implements OnInit {
         .filter(line => line.startsWith('#EXT-X-KEY'))
         .map(line => this.keyPattern.exec(line)[1])
     );
+    this.keys = Array.from(keys.values());
     this.missingKeys = keys.size;
-    keys.forEach(keyUrl => this.getKey(keyUrl));
+    console.log(`Need to download ${this.keys.length} key(s)`);
+    // keys.forEach(keyUrl => this.getKey(keyUrl));
+    this.doNextKey();
   }
 
   private getNextSegment() {
     const localName = this.segments[this.index].replace(/\//g, '_');
     this.downloadFile(`${this.baseUrl}/${this.segments[this.index]}`, localName);
+  }
+
+  private doNextKey() {
+    if (this.indexKey < this.keys.length) {
+      this.getNextKey();
+    }
+  }
+
+  private getNextKey() {
+    const url = this.keys[this.indexKey];
+    this.downloadService.getKey(url)
+      .subscribe(
+        buffer => this.onKeySucceeded2(new Blob([buffer]), `${DownloaderComponent.basename(url)}.key`),
+        () => this.finalReport()
+      );
+  }
+
+  private onKeySucceeded2(keyData: Blob, localName: string) {
+    ++this.indexKey;
+    --this.missingKeys;
+    console.log(`Successfully downloaded ${localName}, key ${this.indexKey} out of ${this.keys.length}`);
+    FileSaver.saveAs(keyData, localName);
+    if (this.indexKey === this.keys.length) {
+      this.startDownloadingSegments();
+    } else {
+      this.doNextKey();
+    }
   }
 }
