@@ -49,24 +49,25 @@ function get_missing_segments()
 	echo "Checking for missing segments..."
 	for x in $(grep -v '^#' $INPUT)
 	do
-		test -r ${x//\//_} || ( echo ${x//_/\/}: && /usr/bin/curl -# -o ${x//\//_} $(cat url)$x )
+		test -r ${x//\//_} || ( echo ${x//_/\/}: && /usr/bin/curl -# -o ${x//\//_} $(cat $URL)$x ) || exit 1
 	done
 }
 
 INPUT=${1:-~/ChromeDownloads/*.m3u}
 
 BASE_NAME=$(get_base_name $INPUT)
-
 FINAL_MP4=$BASE_NAME.mp4
+
 SILENCE_RAW=silence_raw.txt
 SILENCE=silence.txt
 
 OUTPUT=$BASE_NAME.ts
+URL=url.txt
 
 cd $(dirname $INPUT) &&
 echo Processing $INPUT to produce $FINAL_MP4 &&
 
-test -r url && get_missing_segments &&
+test -r $URL && get_missing_segments &&
 test -s $OUTPUT || perl $(dirname $0)/decode.pl $INPUT $(grep -v '^#' $INPUT | wc -l) $OUTPUT &&
 
 # The following ad-break processing is inspired by https://github.com/caseyfw/nhldl/blob/master/nhldl.sh
@@ -156,6 +157,6 @@ echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy 
 
 echo "Removing intermediate files..." &&
 
-rm -f $INPUT *.key *_*.ts *.txt url &&
+rm -f $INPUT *.key *_*.ts *.txt $URL &&
 
 test $(ls | wc -l) -ne 2 && echo WARNING: working directory contains other files!!

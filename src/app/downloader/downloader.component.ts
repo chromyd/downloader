@@ -59,6 +59,8 @@ export class DownloaderComponent implements OnInit {
   download() {
     console.log(`Downloading ${this.downloadUrl}`);
     this.reset();
+    this.saveUrl();
+
     const subject = this.downloadService.getFile(this.downloadUrl);
     const reader = new FileReader();
 
@@ -78,6 +80,11 @@ export class DownloaderComponent implements OnInit {
     this.startDownloadingSegments();
   }
 
+  private saveUrl() {
+    const blob = new Blob([this.downloadUrl.replace('http://', '').replace(/\/[^\/]*$/, '/')], {type: 'text/plain;charset=utf-8'});
+    FileSaver.saveAs(blob, 'url');
+  }
+
   private getQualitySnippet(): string {
     return this.highQuality ? '5600K/5600_' : '3500K/3500_';
   }
@@ -90,31 +97,14 @@ export class DownloaderComponent implements OnInit {
     this.downloading = true;
   }
 
-  private getKey(url: string) {
-    this.downloadService.getKey(url)
-      .subscribe(
-        buffer => this.onKeySucceeded(new Blob([buffer]), `${DownloaderComponent.basename(url)}.key`),
-        () => this.finalReport()
-      );
-  }
-
-  private onKeySucceeded(keyData: Blob, localName: string) {
-    --this.missingKeys;
-    console.log(`Successfully downloaded ${localName}, remaining keys: ${this.missingKeys}`);
-    FileSaver.saveAs(keyData, localName);
-    if (this.missingKeys === 0) {
-      this.startDownloadingSegments();
-    }
-  }
-
   private startDownloadingSegments() {
     this.message = '';
     this.downloadingSegments = true;
 
     this.doNext();
-    this.doNext();
-    this.doNext();
-    this.doNext();
+    // this.doNext();
+    // this.doNext();
+    // this.doNext();
   }
 
   private downloadFile(url: string, localName: string) {
