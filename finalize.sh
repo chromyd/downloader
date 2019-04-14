@@ -55,7 +55,7 @@ function get_missing_segments()
 
 INPUT=${1:-~/ChromeDownloads/*.m3u}
 
-sed -i -e '/^https:/d' $INPUT
+sed -i '' -e '/^https:/d' $INPUT
 
 BASE_NAME=$(get_base_name $INPUT)
 FINAL_MP4=$BASE_NAME.mp4

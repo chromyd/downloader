@@ -14,7 +14,7 @@ export class DownloaderComponent implements OnInit {
 
   keyPattern = /^#EXT-X-KEY.*URI="([^"]*)".*IV=0x(.*)/;
   downloadUrl = '';
-  highQuality = true;
+  highQuality = false;
   baseUrl = '';
 
   detailedProgress = false;
