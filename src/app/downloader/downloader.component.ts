@@ -179,14 +179,14 @@ export class DownloaderComponent implements OnInit {
   }
 
   private prepare(text: string) {
-    this.segments = text.split('\n').filter(e => e && !e.startsWith('#'));
+    this.segments = text.split('\n').filter(e => e && !e.startsWith('#') && !e.startsWith('https:') );
     this.totalCount = this.segments.length;
   }
 
   private getKeys(text: string) {
     const keys = new Set(
       text.split('\n')
-        .filter(line => line.startsWith('#EXT-X-KEY'))
+        .filter(line => line.startsWith('#EXT-X-KEY:METHOD=AES'))
         .map(line => this.keyPattern.exec(line)[1])
     );
     this.keys = Array.from(keys.values());
