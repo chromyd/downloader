@@ -2,32 +2,6 @@
 #
 # Decrypts and concatenates all parts based on the M3U8 file, then invokes post-processing
 
-function find_game_start()
-{
-	local INPUT=$1
-	local RANGE=780
-	local POS=300
-	local REF_AT=0
-	local GOALIE_AT=0
-
-	while [ $POS -lt $RANGE ];
-	do
-		local TEXT=$(ffmpeg -v fatal -nostdin -ss $POS -i $INPUT -vframes 1 -f image2 - | tesseract stdin stdout 2>/dev/null)
-		echo $TEXT | egrep -qi 'officials|referee|linesman|linesmen' && REF_AT=$POS
-		echo $TEXT | egrep -qi 'losses|shutouts|crawford|forsberg|glass' && GOALIE_AT=$POS
-		let 'POS += 1'
-	done
-
-	if [ $((REF_AT - GOALIE_AT)) -gt 42 -a $GOALIE_AT -gt 0 -o $REF_AT -eq 0 ];
-	then
-	echo Game start G: $GOALIE_AT 1>&2
-	  echo $GOALIE_AT
-	else
-	echo Game start R: $REF_AT 1>&2
-	  echo $REF_AT
-	fi
-}
-
 function get_base_name()
 {
   if [ -e $1 ]
@@ -96,47 +70,15 @@ BEGIN { line = "" }
 END { if (line != "") print line " | silence_end: 0 | silence_duration: 0" }
 ' $SILENCE |
 
-# Merge consecutive silences exceeding specific length (interpreted as ads within intermissions) and extend their duration to the preset lengths
-GAME_END=$(get_broadcast_end $OUTPUT) perl -ne '
-INIT {
-  $delayed_ss = $delayed_se = $iidx = 0;
-  @intermission_durations = (1080, 1080, (900) x 20);
-}
-{
-	if (/^silence_start: (\S+) \| silence_end: (\S+) \| silence_duration: (\S+)/) {
-		if ($3 > 116) {
-			if ($delayed_ss == 0) {
-				$delayed_ss = $1;
-			}
-			$delayed_se = $2;
-		}
-		else {
-			if ($delayed_ss == 0) {
-				print $_;
-			}
-			else {
-			  $break_duration = $delayed_se - $delayed_ss;
-			  if ($break_duration > $intermission_durations[$iidx]) {
-			    die "Excessive break detected at $delayed_ss lasting $break_duration seconds";
-			  }
-				printf "silence_start: %.2f | silence_end: %.2f | silence_duration: %.3f (delayed)\n", $delayed_ss, $delayed_ss + $break_duration, $break_duration;
-				print $_;
-			}
-			$delayed_ss = 0;
-		}
-	}
-}' |
-
 # Split into segments without ad breaks.
-OUTPUT=$OUTPUT GAME_START=$(find_game_start $OUTPUT) perl -ne '
+OUTPUT=$OUTPUT perl -ne '
 use List::Util ("max");
 INIT { $last_se = 0; $index = 0; }
 {
 	if (/^silence_start: (\S+) \| silence_end: (\S+) \| silence_duration: (\S+)/) {
 		$ss = $1;
 		if ($last_se != 0) {
-			$gs = max($last_se, $ENV{GAME_START});
-			printf "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $gs, ($ss - $gs), $index++;
+			printf "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $last_se, ($ss - $last_se), $index++;
 		}
 		$last_se = $2;
 	}
