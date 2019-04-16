@@ -21,6 +21,7 @@ function get_broadcast_end()
 OUTPUT=$1
 
 BASE_NAME=$(get_base_name $OUTPUT)
+INTER_MP4=inter.mp4
 FINAL_MP4=$BASE_NAME.mp4
 
 SILENCE_RAW=silence_raw.txt
@@ -54,22 +55,31 @@ END { if (line != "") print line " | silence_end: 0 | silence_duration: 0" }
 ' $SILENCE |
 
 # Split into segments without ad breaks.
-OUTPUT=$OUTPUT perl -ne '
+OUTPUT=$OUTPUT BASE_NAME=$BASE_NAME perl -ne '
 use List::Util ("max");
-INIT { $last_se = 0; $index = 0; }
+INIT {
+  $last_se = 0; $index = 0; $meta_ss = 0;
+  open $fh_video, ">", "videos.txt" or die $!;
+  open $fh_meta, ">", "meta.txt" or die $!;
+  printf {$fh_meta} ";FFMETADATA1\ntitle=%s\n", $ENV{BASE_NAME};
+}
 {
 	if (/^silence_start: (\S+) \| silence_end: (\S+) \| silence_duration: (\S+)/) {
 		$ss = $1;
 		if ($last_se != 0) {
-			printf "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $last_se, ($ss - $last_se), $index++;
+		  $duration = $ss - $last_se;
+			printf {$fh_video} "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $last_se, $duration, $index++;
+			printf {$fh_meta} "[CHAPTER]\nTIMEBASE=1/1000\nSTART=%d\nEND=%d\ntitle=Chapter %d\n", 1000 * $meta_ss, 1000 * ($meta_ss + $duration), $index;
+			$meta_ss += $duration;
 		}
 		$last_se = $2;
 	}
 	else {
 		die "ERROR: found non-matching line: $_";
 	}
-}' |
-sh &&
+}' &&
+
+sh < videos.txt &&
 
 for FILE in b_0*.ts
 do
@@ -79,11 +89,15 @@ done
 echo "Merging break-free segments..."
 
 MONTH=$(date +%m)
-((MONTH >= 4 && MONTH < 9)) && LENGTH=15300 || LENGTH=8100
-echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy -y -t $LENGTH $FINAL_MP4 | sh #&&
+((MONTH >= 4 && MONTH < 9)) && LENGTH=10800 || LENGTH=8100
+echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\"  -c copy -y -t $LENGTH $INTER_MP4 | sh &&
 
-#echo "Removing intermediate files..." &&
+echo "Adding metadata..." &&
 
-#rm -f b_0*.ts silence*.txt &&
+ffmpeg -v 16 -i $INTER_MP4 -i meta.txt -map_metadata 1 -codec copy $FINAL_MP4 &&
+
+echo "Removing intermediate files..." &&
+
+rm -f $INTER_MP4 meta.txt videos.txt b_0*.ts silence*.txt
 
 #test $(ls | wc -l) -ne 2 && echo WARNING: working directory contains other files!!

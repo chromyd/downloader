@@ -22,7 +22,7 @@ function get_missing_segments()
 	done
 }
 
-INPUT=${1:-~/ChromeDownloads/*.m3u}
+INPUT=${1:-~/ChromeDownloads/*.m3u*}
 
 sed -i '' -e '/^https:/d' $INPUT
 
