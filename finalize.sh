@@ -1,7 +1,17 @@
+# This file is now obsolete - see assemble.sh and process.sh
+# Add the next function to bash_functions for easy post-processing:
+#
+function finalize() {
+        sh ~/ws/freestream/assemble.sh
+        sh ~/ws/freestream/process.sh ~/ChromeDownloads/2019*.ts
+        mv -v ~/ChromeDownloads/*.mp4 ~/nhl
+        find ~/ChromeDownloads/*.ts -size +1G | xargs -I {} mv -v {} ~/nhl/ts
+}
+
 #!/bin/bash
 #
 # Decrypts and concatenates all parts based on the M3U8 file, then invokes post-processing
-
+#
 function get_base_name()
 {
   if [ -e $1 ]
