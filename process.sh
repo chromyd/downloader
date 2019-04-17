@@ -36,7 +36,7 @@ echo "Detecting blank commercial breaks..." &&
 # Detect silences that indicate ads.
 # |& not working on osx 10.10.5 converted to two stage
 
-ffmpeg -nostats -i $OUTPUT -filter_complex "[0:a]silencedetect=n=-50dB:d=10[outa]" -map [outa] -f s16le -y /dev/null &> $SILENCE_RAW &&
+ffmpeg -nostats -ss 600 -i $OUTPUT -filter_complex "[0:a]silencedetect=n=-50dB:d=10[outa]" -map [outa] -f s16le -y /dev/null &> $SILENCE_RAW &&
 
 echo "Creating break-free segments..." &&
 grep "^\[silence" $SILENCE_RAW | sed "s/^\[silencedetect.*\] //" > $SILENCE &&
@@ -58,18 +58,63 @@ END { if (line != "") print line " | silence_end: 0 | silence_duration: 0" }
 OUTPUT=$OUTPUT BASE_NAME=$BASE_NAME perl -ne '
 use List::Util ("max");
 INIT {
-  $last_se = 0; $index = 0; $meta_ss = 0;
+  $last_se = 0; $index = 0; $meta_ss = $meta_offset = 600;
   open $fh_video, ">", "videos.txt" or die $!;
   open $fh_meta, ">", "meta.txt" or die $!;
   printf {$fh_meta} ";FFMETADATA1\ntitle=%s\n", $ENV{BASE_NAME};
+  print {$fh_meta} <<EOS
+[CHAPTER]
+TIMEBASE=1/1000
+START=0
+END=390000
+title=Pregame 1
+[CHAPTER]
+TIMEBASE=1/1000
+START=390000
+END=420000
+title=Pregame 2
+[CHAPTER]
+TIMEBASE=1/1000
+START=420000
+END=450000
+title=Pregame 3
+[CHAPTER]
+TIMEBASE=1/1000
+START=450000
+END=480000
+title=Pregame 4
+[CHAPTER]
+TIMEBASE=1/1000
+START=480000
+END=510000
+title=Pregame 5
+[CHAPTER]
+TIMEBASE=1/1000
+START=510000
+END=540000
+title=Pregame 6
+[CHAPTER]
+TIMEBASE=1/1000
+START=540000
+END=570000
+title=Pregame 7
+[CHAPTER]
+TIMEBASE=1/1000
+START=570000
+END=600000
+title=Pregame 8
+EOS
 }
 {
 	if (/^silence_start: (\S+) \| silence_end: (\S+) \| silence_duration: (\S+)/) {
 		$ss = $1;
     $duration = $ss - $last_se;
+    $meta_duration = $duration - $meta_offset;
+    ($meta_duration > 0) || die "Unexpected negative meta duration!";
     printf {$fh_video} "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $last_se, $duration, $index++;
-    printf {$fh_meta} "[CHAPTER]\nTIMEBASE=1/1000\nSTART=%d\nEND=%d\ntitle=Chapter %d\n", 1000 * $meta_ss, 1000 * ($meta_ss + $duration), $index;
+    printf {$fh_meta} "[CHAPTER]\nTIMEBASE=1/1000\nSTART=%d\nEND=%d\ntitle=Chapter %d\n", 1000 * $meta_ss, 1000 * ($meta_ss + $meta_duration), $index;
     $meta_ss += $duration;
+    $meta_offset = 0;
 		$last_se = $2;
 	}
 	else {
