@@ -59,7 +59,7 @@ export class DownloaderComponent implements OnInit {
   download() {
     console.log(`Downloading ${this.downloadUrl}`);
     this.reset();
-    this.saveUrl();
+    // this.saveUrl();
 
     const subject = this.downloadService.getFile(this.downloadUrl);
     const reader = new FileReader();

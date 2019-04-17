@@ -13,15 +13,6 @@ function get_base_name()
   fi
 }
 
-function get_missing_segments()
-{
-	echo "Checking for missing segments..."
-	for x in $(grep -v '^#' $INPUT)
-	do
-		test -r ${x//\//_} || ( echo ${x//_/\/}: && /usr/bin/curl -# -o ${x//\//_} $(cat $URL)$x ) || exit 1
-	done
-}
-
 INPUT=${1:-~/ChromeDownloads/*.m3u*}
 
 sed -i '' -e '/^https:/d' $INPUT
@@ -29,13 +20,11 @@ sed -i '' -e '/^https:/d' $INPUT
 BASE_NAME=$(get_base_name $INPUT)
 
 OUTPUT=$BASE_NAME.ts
-URL=url.txt
 
 cd $(dirname $INPUT) &&
 echo Processing $INPUT to produce $OUTPUT &&
 
-test -r $URL && get_missing_segments &&
 test -s $OUTPUT || perl $(dirname $0)/decode.pl $INPUT $(grep -v '^#' $INPUT | wc -l) $OUTPUT &&
 grep -v '^#' $INPUT | tr / _ | xargs rm &&
-rm -f $INPUT *.key url*.txt &&
+rm -f $INPUT *.key &&
 ls $PWD/$OUTPUT

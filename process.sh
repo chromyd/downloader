@@ -98,6 +98,6 @@ ffmpeg -v 16 -i $INTER_MP4 -i meta.txt -map_metadata 1 -codec copy $FINAL_MP4 &&
 
 echo "Removing intermediate files..." &&
 
-rm -f $INTER_MP4 meta.txt videos.txt b_0*.ts silence*.txt
+rm -f $INTER_MP4 meta.txt videos.txt b_*.ts silence*.txt
 
 #test $(ls | wc -l) -ne 2 && echo WARNING: working directory contains other files!!
