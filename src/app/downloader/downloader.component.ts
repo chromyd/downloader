@@ -66,7 +66,7 @@ export class DownloaderComponent implements OnInit {
 
     this.baseUrl = this.downloadUrl.substr(0, this.downloadUrl.lastIndexOf('/'));
 
-    reader.onload = () => this.processList(reader.result);
+    reader.onload = () => this.processList(reader.result as string);
 
     subject.subscribe(fileData => FileSaver.saveAs(fileData, DownloaderComponent.friendlyName(this.downloadUrl)));
     subject.subscribe( fileData => reader.readAsText(fileData));
