@@ -2,6 +2,11 @@
 #
 # Assembles all parts based on the M3U8 file into a TS file
 
+function die {
+  echo $*
+  exit 1
+}
+
 function get_base_name()
 {
   if [ -e $1 ]
@@ -14,6 +19,7 @@ function get_base_name()
 }
 
 INPUT=${1:-~/ChromeDownloads/*.m3u*}
+test $(echo $INPUT | wc -w) -eq 1 || die "More than one M3U8 playlist found"
 
 sed -i '' -e '/^https:/d' $INPUT
 
