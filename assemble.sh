@@ -18,7 +18,7 @@ function get_base_name()
   fi
 }
 
-INPUT=${1:-~/ChromeDownloads/*.m3u*}
+INPUT=${1:-~/FirefoxDownloads/2020????-???@???}
 test $(echo $INPUT | wc -w) -eq 1 || die "More than one M3U8 playlist found"
 
 sed -i '' -e '/^https:/d' $INPUT
@@ -28,7 +28,7 @@ BASE_NAME=$(get_base_name $INPUT)
 OUTPUT=$BASE_NAME.ts
 
 cd $(dirname $INPUT) &&
-echo Processing $INPUT to produce $OUTPUT &&
+echo Processing $INPUT to produce $OUTPUT in $(pwd) &&
 
 test -s $OUTPUT || perl $(dirname $0)/decode.pl $INPUT $(grep -v '^#' $INPUT | wc -l) $OUTPUT &&
 grep -v '^#' $INPUT | tr / _ | xargs rm &&

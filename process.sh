@@ -2,6 +2,8 @@
 #
 # Process a TS file by removing ad breaks and adding chapter metadata to an output MP4 file
 
+# TODO: only join chunks bigger than 150MB (get rid of intermission programme)
+
 function get_base_name()
 {
   if [ -e $1 ]
@@ -65,7 +67,7 @@ INIT {
 }
 {
 	if (/^silence_start: (\S+) \| silence_end: (\S+) \| silence_duration: (\S+)/) {
-		$ss = $1;
+		$ss = $1 - 7;
     $duration = $ss - $last_se;
     printf {$fh_video} "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $last_se, $duration, $index++;
     printf {$fh_meta} "[CHAPTER]\nTIMEBASE=1/1000\nSTART=%d\nEND=%d\ntitle=Chapter %d\n", 1000 * $meta_ss, 1000 * ($meta_ss + $duration), $index;
@@ -79,23 +81,12 @@ INIT {
 
 sh < videos.txt &&
 
-for FILE in b_0*.ts
-do
-  ln $FILE b_1${FILE#b_0} && ln $FILE b_2${FILE#b_0} || exit
-done
-
 echo "Merging break-free segments..."
 
-MONTH=$(date +%m)
-((MONTH >= 4 && MONTH < 9)) && LENGTH=10800 || LENGTH=8100
-echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\"  -c copy -y -t $LENGTH $INTER_MP4 | sh &&
-
-echo "Adding metadata..." &&
-
-ffmpeg -v 16 -i $INTER_MP4 -i meta.txt -map_metadata 1 -codec copy $FINAL_MP4 &&
+echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\"  -c copy -y $FINAL_MP4 | sh &&
 
 echo "Removing intermediate files..." &&
 
-rm -f $INTER_MP4 meta.txt videos.txt b_*.ts silence*.txt
+rm -f meta.txt b_*.ts videos.txt $SILENCE $SILENCE_RAW
 
 #test $(ls | wc -l) -ne 2 && echo WARNING: working directory contains other files!!

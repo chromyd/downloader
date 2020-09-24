@@ -1,17 +1,7 @@
-# This file is now obsolete - see assemble.sh and process.sh
-# Add the next function to bash_functions for easy post-processing:
-#
-function finalize() {
-        sh ~/ws/freestream/assemble.sh
-        sh ~/ws/freestream/process.sh ~/FirefoxDownloads/202*.ts
-        mv -v ~/FirefoxDownloads/*.mp4 ~/nhl
-        find ~/FirefoxDownloads/*.ts -size +1G | xargs -I {} mv -v {} ~/nhl/ts
-}
-
 #!/bin/bash
 #
-# Decrypts and concatenates all parts based on the M3U8 file, then invokes post-processing
-#
+# Process a TS file by removing ad breaks and adding chapter metadata to an output MP4 file
+
 function get_base_name()
 {
   if [ -e $1 ]
@@ -28,23 +18,17 @@ function get_broadcast_end()
   ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $1
 }
 
-INPUT=${1:-~/FirefoxDownloads/*.m3u}
+OUTPUT=$1
 
-sed -i '' -e '/^https:/d' $INPUT
-
-BASE_NAME=$(get_base_name $INPUT)
+BASE_NAME=$(get_base_name $OUTPUT)
+INTER_MP4=inter.mp4
 FINAL_MP4=$BASE_NAME.mp4
 
 SILENCE_RAW=silence_raw.txt
 SILENCE=silence.txt
 
-OUTPUT=$BASE_NAME.ts
-URL=url.txt
-
-cd $(dirname $INPUT) &&
-echo Processing $INPUT to produce $FINAL_MP4 &&
-
-test -s $OUTPUT || perl $(dirname $0)/decode.pl $INPUT $(grep -v '^#' $INPUT | wc -l) $OUTPUT &&
+cd $(dirname $OUTPUT) &&
+echo Processing $OUTPUT to produce $FINAL_MP4 &&
 
 # The following ad-break processing is inspired by https://github.com/caseyfw/nhldl/blob/master/nhldl.sh
 
@@ -54,7 +38,7 @@ echo "Detecting blank commercial breaks..." &&
 
 ffmpeg -nostats -i $OUTPUT -filter_complex "[0:a]silencedetect=n=-50dB:d=10[outa]" -map [outa] -f s16le -y /dev/null &> $SILENCE_RAW &&
 
-echo "Detecting game start & Creating break-free segments..." &&
+echo "Creating break-free segments..." &&
 grep "^\[silence" $SILENCE_RAW | sed "s/^\[silencedetect.*\] //" > $SILENCE &&
 
 # If the stream does not end in silence then
@@ -71,22 +55,29 @@ END { if (line != "") print line " | silence_end: 0 | silence_duration: 0" }
 ' $SILENCE |
 
 # Split into segments without ad breaks.
-OUTPUT=$OUTPUT perl -ne '
+OUTPUT=$OUTPUT BASE_NAME=$BASE_NAME perl -ne '
 use List::Util ("max");
-INIT { $last_se = 0; $index = 0; }
+INIT {
+  $last_se = 0; $index = 0; $meta_ss = 0;
+  open $fh_video, ">", "videos.txt" or die $!;
+  open $fh_meta, ">", "meta.txt" or die $!;
+  printf {$fh_meta} ";FFMETADATA1\ntitle=%s\n", $ENV{BASE_NAME};
+}
 {
 	if (/^silence_start: (\S+) \| silence_end: (\S+) \| silence_duration: (\S+)/) {
 		$ss = $1 - 7;
-		if ($last_se != 0) {
-			printf "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $last_se, ($ss - $last_se), $index++;
-		}
+    $duration = $ss - $last_se;
+    printf {$fh_video} "ffmpeg -nostdin -i $ENV{OUTPUT} -ss %.2f -t %.2f -c copy -v error -y b_%03d.ts\n", $last_se, $duration, $index++;
+    printf {$fh_meta} "[CHAPTER]\nTIMEBASE=1/1000\nSTART=%d\nEND=%d\ntitle=Chapter %d\n", 1000 * $meta_ss, 1000 * ($meta_ss + $duration), $index;
+    $meta_ss += $duration;
 		$last_se = $2;
 	}
 	else {
 		die "ERROR: found non-matching line: $_";
 	}
-}' |
-sh &&
+}' &&
+
+sh < videos.txt &&
 
 for FILE in b_0*.ts
 do
@@ -95,12 +86,17 @@ done
 
 echo "Merging break-free segments..."
 
-MONTH=$(date +%m)
-((MONTH >= 4 && MONTH < 9)) && LENGTH=15300 || LENGTH=8100
-echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\" -c copy -y -t $LENGTH $FINAL_MP4 | sh &&
+#MONTH=$(date +%m)
+#((MONTH >= 4 && MONTH < 9)) && LENGTH=10800 || LENGTH=8100
+LENGTH=10800
+echo ffmpeg -v 16 -i \"$(echo "concat:$(ls b_*ts | paste -s -d\| -)")\"  -c copy -y -t $LENGTH $INTER_MP4 | sh &&
+
+echo "Adding metadata..." &&
+
+ffmpeg -v 16 -i $INTER_MP4 -i meta.txt -map_metadata 1 -codec copy $FINAL_MP4 &&
 
 echo "Removing intermediate files..." &&
 
-rm -f $INPUT *.key *_*.ts *.txt $URL &&
+rm -f $INTER_MP4 meta.txt b_*.ts videos.txt $SILENCE $SILENCE_RAW
 
-test $(ls | wc -l) -ne 2 && echo WARNING: working directory contains other files!!
+#test $(ls | wc -l) -ne 2 && echo WARNING: working directory contains other files!!
